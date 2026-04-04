@@ -15,14 +15,18 @@ Se consideró que la red para tutores era la opción más óptima, ya que es un 
 # Ejecución del Proyecto (Frontend)
 1. Navega hasta la carpeta del Frontend
 Desde la raiz del proyecto, entra al directorio correspondiente ejecutando el siguiente comando.
+
 cd frontend
 
-2. Instala las dependencias (solo si es la primera vez que lo haces)
+3. Instala las dependencias (solo si es la primera vez que lo haces)
+
 npm install
 
-3. Inicia el servidor en desarrollo:
+5. Inicia el servidor en desarrollo:
+
 npm run dev
 
 Nota:
+
 Una vez ejecutado, el proyecto estará disponible por defecto en:
 http://localhost:5173 (si usas Vite)
