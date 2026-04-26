@@ -16,4 +16,11 @@ class AppColors {
 
   // Estados
   static const Color error = Color(0xFFCF6679);
+
+
+  static const Color bgLight = Color(0xFFFFFFFF);
+  static const Color bgMedium = Color(0xFFE0E0E0);
+  static const Color darkGray = Color(0xFF333333);
+  static const Color mediumGray = Color(0xFF888888);
+  static const Color lightGray = Color(0xFFF5F5F5);
 }
