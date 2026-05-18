@@ -1,24 +1,24 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 
-class ProfessionalCard extends StatelessWidget {
-  final String name;
-  final String handle;
-  final String profession;
-  final String imageUrl;
+class CommunityCard extends StatelessWidget {
+  final String userName;
+  final String userImageUrl;
   final String date;
-  final String description;
+  final String content;
   final List<String> hashtags;
+  final int commentCount;
+  final int likeCount;
 
-  const ProfessionalCard({
+  const CommunityCard({
     super.key,
-    required this.name,
-    required this.handle,
-    required this.profession,
-    required this.imageUrl,
+    required this.userName,
+    required this.userImageUrl,
     required this.date,
-    required this.description,
+    required this.content,
     this.hashtags = const [],
+    this.commentCount = 0,
+    this.likeCount = 0,
   });
 
   @override
@@ -40,61 +40,46 @@ class ProfessionalCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // header -----------------
+          // Header -------------
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               CircleAvatar(
-                radius: 28,
-                backgroundImage: NetworkImage(imageUrl),
+                radius: 24,
+                backgroundImage: NetworkImage(userImageUrl),
                 backgroundColor: AppColors.primaryLight,
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    Text(
-                      handle,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  userName,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
               ),
               Text(
                 date,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textMuted,
-                ),
+                style: TextStyle(fontSize: 12.64, color: AppColors.textMuted),
               ),
             ],
           ),
           const SizedBox(height: 12),
 
-          // descripción ---------------------
+          // contenido publicación
           Text(
-            description,
+            content,
             style: const TextStyle(
-              fontSize: 14,
+              fontSize: 14.22,
               color: AppColors.textPrimary,
               height: 1.5,
             ),
           ),
 
-          // hashtags ---------------------
-          if (hashtags.isNotEmpty) ...[
+          // hashtags --------------
+          if(hashtags.isNotEmpty) ...[
             const SizedBox(height: 8),
             Wrap(
               spacing: 6,
@@ -103,7 +88,7 @@ class ProfessionalCard extends StatelessWidget {
                     (tag) => Text(
                       tag,
                       style: const TextStyle(
-                        fontSize: 13,
+                        fontSize: 14.22,
                         color: AppColors.primary,
                         fontWeight: FontWeight.w500,
                       ),
@@ -115,12 +100,12 @@ class ProfessionalCard extends StatelessWidget {
 
           const SizedBox(height: 12),
 
-          // acciones -----------------------------
+          // acciones -------------
           Row(
             children: [
-              _ActionButton(icon: Icons.chat_bubble_outline, count: 0),
+              _ActionButton(icon: Icons.chat_bubble_outline, count: commentCount),
               const SizedBox(width: 16),
-              _ActionButton(icon: Icons.favorite_border, count: 0),
+              _ActionButton(icon: Icons.favorite_border, count: likeCount),
             ],
           ),
         ],
@@ -136,7 +121,7 @@ class _ActionButton extends StatelessWidget {
   const _ActionButton({required this.icon, required this.count});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext content) {
     return Row(
       children: [
         Icon(icon, size: 18, color: AppColors.textMuted),
@@ -149,3 +134,7 @@ class _ActionButton extends StatelessWidget {
     );
   }
 }
+
+
+
+
