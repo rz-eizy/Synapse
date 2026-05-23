@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/constants.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class RegisterView extends StatefulWidget {
   const RegisterView({super.key});
@@ -11,6 +14,99 @@ class RegisterView extends StatefulWidget {
 class _RegisterViewState extends State<RegisterView> {
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
+  bool _isLoading = false;
+
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
+
+  Future<void> _register() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    final confirmPassword = _confirmPasswordController.text;
+
+    if (email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Por favor, llene todos los campos')),
+      );
+      return;
+    }
+    if (password != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Las contraseñas no coinciden')),
+      );
+      return;
+    }
+    setState(() => _isLoading = true);
+    final url = Uri.parse('${ApiConfig.baseUrl}/api/auth/register');
+    String errorMessage = 'Error al registrarse';
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode({
+          'email': email,
+          'password': password,
+        }),
+      );
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Cuenta creada con éxito'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pushReplacementNamed(context, '/login');
+        }
+      } else {
+        errorMessage = 'Error al registrarse (${response.statusCode})';
+        if (response.body.isNotEmpty) {
+          try {
+            final dynamic responseData = jsonDecode(response.body);
+            if (responseData is Map<String, dynamic>) {
+              errorMessage = responseData['message'] ??
+                  responseData['error'] ??
+                  errorMessage;
+            }
+          } catch (_) {}
+        }
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMessage),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error de conexión: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+@override
+void dispose() {
+  _emailController.dispose();
+  _passwordController.dispose();
+  _confirmPasswordController.dispose();
+  super.dispose();
+}
+
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -38,12 +134,17 @@ class _RegisterViewState extends State<RegisterView> {
               const SizedBox(height: 28),
 
               // Campo gmail ---------------
-              _RoundedTextField(hintText: 'Correo Electrónico'),
+              _RoundedTextField(
+                hintText: 'Correo Electrónico',
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+              ),
               const SizedBox(height: 16),
 
               // Campo contraseña -----------------
               _RoundedTextField(
                 hintText: 'Contraseña',
+                controller: _passwordController,
                 obscureText: _obscurePassword,
                 suffixIcon: IconButton(
                   icon: Icon(
@@ -61,6 +162,7 @@ class _RegisterViewState extends State<RegisterView> {
               // Campo confirmar contraseña -----------------
               _RoundedTextField(
                 hintText: 'Confirmar Contraseña',
+                controller: _confirmPasswordController,
                 obscureText: _obscureConfirm,
                 suffixIcon: IconButton(
                   icon: Icon(
@@ -89,8 +191,17 @@ class _RegisterViewState extends State<RegisterView> {
                     textStyle: const TextStyle(
                         fontSize: 16, fontWeight: FontWeight.w600),
                   ),
-                  onPressed: () => Navigator.pushNamed(context, '/home'),
-                  child: const Text('Crear Cuenta'),
+                  onPressed: _isLoading ? null : _register,
+                  child: _isLoading
+                      ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
+                      : const Text('Crear Cuenta'),
                 ),
               ),
               const SizedBox(height: 32),
@@ -123,7 +234,6 @@ class _RegisterViewState extends State<RegisterView> {
   }
 }
 
-// logo Appoyo
 // LogoAppoyo -----------
 class _AppoyoLogo extends StatelessWidget {
   const _AppoyoLogo();
@@ -139,47 +249,28 @@ class _AppoyoLogo extends StatelessWidget {
   }
 }
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 110,
-      height: 110,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: AppColors.primaryMedium, width: 2),
-        color: Colors.white,
-      ),
-      child: const Center(
-        child: Text(
-          'A',
-          style: TextStyle(
-            fontSize: 52,
-            fontWeight: FontWeight.w300,
-            color: AppColors.primary,
-            fontStyle: FontStyle.italic,
-          ),
-        ),
-      ),
-    );
-  }
-
-
 // Campo de texto style
 class _RoundedTextField extends StatelessWidget {
   final String hintText;
   final bool obscureText;
   final Widget? suffixIcon;
+  final TextEditingController controller;
+  final TextInputType? keyboardType;
 
   const _RoundedTextField({
     required this.hintText,
+    required this.controller,
     this.obscureText = false,
     this.suffixIcon,
+    this.keyboardType,
   });
 
   @override
   Widget build(BuildContext context) {
     return TextField(
+      controller: controller,
       obscureText: obscureText,
+      keyboardType: keyboardType,
       style: const TextStyle(color: AppColors.textPrimary, fontSize: 15),
       decoration: InputDecoration(
         hintText: hintText,
@@ -188,7 +279,7 @@ class _RoundedTextField extends StatelessWidget {
         fillColor: Colors.white,
         suffixIcon: suffixIcon,
         contentPadding:
-            const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
