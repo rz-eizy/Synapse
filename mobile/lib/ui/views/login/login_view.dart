@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/constants.dart';
 import '../../../core/theme/app_colors.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -28,7 +29,7 @@ class _LoginViewState extends State<LoginView> {
     }
     setState(() => _isLoading = true);
 
-    final url = Uri.parse('http://10.0.2.2:8080/api/auth/login'); //Va a cambiar si el telefono es un emulador, es real, esta conectado por wifi, por cable, etc.
+    final url = Uri.parse('${ApiConfig.baseUrl}/api/auth/login');
 
     try {
       final response = await http.post(
