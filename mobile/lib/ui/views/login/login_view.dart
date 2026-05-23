@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -10,6 +12,69 @@ class LoginView extends StatefulWidget {
 
 class _LoginViewState extends State<LoginView> {
   bool _obscurePassword = true;
+  bool _isLoading = false;
+
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  Future<void> _login() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Llene los campos')),
+      );
+      return;
+    }
+    setState(() => _isLoading = true);
+
+    final url = Uri.parse('http://10.0.2.2:8080/api/auth/login'); //Va a cambiar si el telefono es un emulador, es real, esta conectado por wifi, por cable, etc.
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode({
+          'email': email,
+          'password': password,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, '/home');
+        }
+      } else {
+        final Map<String, dynamic> responseData = jsonDecode(response.body);
+        final errorMessage = responseData['message'] ?? 'Error al iniciar sesión';
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(errorMessage)),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error de conexión: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,47 +103,24 @@ class _LoginViewState extends State<LoginView> {
                 const SizedBox(height: 32),
 
                 // Campo Email -----------------
-                _RoundedTextField(hintText: 'Correo Electrónico'),
+                _RoundedTextField(hintText: 'Correo Electrónico', controller: _emailController, keyboardType: TextInputType.emailAddress,),
                 const SizedBox(height: 16),
 
                 // Contraseña -----------------
-                _RoundedTextField(
-                  hintText: 'Contraseña',
-                  obscureText: _obscurePassword,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
-                      color: AppColors.textMuted,
-                    ),
-                    onPressed: () =>
-                        setState(() => _obscurePassword = !_obscurePassword),
-                  ),
-                ),
+                _RoundedTextField(hintText: 'Contraseña', controller: _passwordController, obscureText: _obscurePassword, suffixIcon: IconButton(
+                    icon: Icon(_obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: AppColors.textMuted,),
+                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword), ), ),
                 const SizedBox(height: 28),
 
                 // Iniciar Sesión ----------
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: ElevatedButton(
+                SizedBox(width: double.infinity, height: 52, child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      textStyle: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    onPressed: () => Navigator.pushNamed(context, '/home'),
-                    child: const Text('Iniciar Sesión'),
-                  ),
-                ),
+                      backgroundColor: AppColors.primary, foregroundColor: Colors.white, elevation: 0, shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30), ),
+                      textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, ), ),
+                    onPressed: _isLoading ? null : _login,
+                    child: _isLoading ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(
+                        color: Colors.white, strokeWidth: 2,), ) : const Text('Iniciar Sesión'), ), ),
                 const SizedBox(height: 20),
 
                 // Olvidaste tu contraseña ----------------
@@ -150,17 +192,23 @@ class _RoundedTextField extends StatelessWidget {
   final String hintText;
   final bool obscureText;
   final Widget? suffixIcon;
+  final TextEditingController controller; // Required
+  final TextInputType? keyboardType;
 
   const _RoundedTextField({
     required this.hintText,
+    required this.controller,
     this.obscureText = false,
     this.suffixIcon,
+    this.keyboardType,
   });
 
   @override
   Widget build(BuildContext context) {
     return TextField(
+      controller: controller,
       obscureText: obscureText,
+      keyboardType: keyboardType,
       style: const TextStyle(color: AppColors.textPrimary, fontSize: 15),
       decoration: InputDecoration(
         hintText: hintText,

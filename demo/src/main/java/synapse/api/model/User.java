@@ -22,13 +22,13 @@ public class User {
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY) 
     private Long id;
 
-    @Column(nullable = false, length = 50)
+    @Column(name = "full_name",nullable = false, length = 50)
     private String username;
 
-    @Column(nullable = false, unique = true, length = 100)
+    @Column(name = "email",nullable = false, unique = true, length = 100)
     private String email;
 
-    @Column(nullable = false, length = 255)
+    @Column(name = "password_hash",nullable = false, length = 255)
     @JsonIgnore
     private String password;
 }
