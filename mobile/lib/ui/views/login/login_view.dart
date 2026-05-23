@@ -47,12 +47,20 @@ class _LoginViewState extends State<LoginView> {
           Navigator.pushReplacementNamed(context, '/home');
         }
       } else {
-        final Map<String, dynamic> responseData = jsonDecode(response.body);
-        final errorMessage = responseData['message'] ?? 'Error al iniciar sesión';
-
+        String errorMessage = 'Error al iniciar sesión (${response.statusCode})';
+        if (response.body.isNotEmpty) {
+          try {
+            final dynamic responseData = jsonDecode(response.body);
+            if (responseData is Map<String, dynamic>) {
+              errorMessage = responseData['message'] ??
+                  responseData['error'] ??
+                  errorMessage;
+            }
+          } catch (_) {}
+        }
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(errorMessage)),
+            SnackBar(content: Text(errorMessage), backgroundColor: Colors.redAccent,),
           );
         }
       }
