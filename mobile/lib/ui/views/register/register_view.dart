@@ -133,6 +133,13 @@ void dispose() {
               ),
               const SizedBox(height: 28),
 
+              // Campo Nombre de usuario ------------ (Integración Pendiente)
+              _RoundedTextField(
+                hintText: 'Nombre de usuario',
+                controller: ,
+                keyboardType: ,
+              ),
+              const SizedBox(height: 16),
               // Campo gmail ---------------
               _RoundedTextField(
                 hintText: 'Correo Electrónico',
