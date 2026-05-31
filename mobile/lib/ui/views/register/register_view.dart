@@ -16,16 +16,18 @@ class _RegisterViewState extends State<RegisterView> {
   bool _obscureConfirm = true;
   bool _isLoading = false;
 
+  final TextEditingController _userNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
 
   Future<void> _register() async {
+    final username = _userNameController.text;
     final email = _emailController.text.trim();
     final password = _passwordController.text;
     final confirmPassword = _confirmPasswordController.text;
 
-    if (email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
+    if (username.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Por favor, llene todos los campos')),
       );
@@ -48,6 +50,7 @@ class _RegisterViewState extends State<RegisterView> {
           'Content-Type': 'application/json; charset=UTF-8',
         },
         body: jsonEncode({
+          'name': username,
           'email': email,
           'password': password,
         }),
@@ -136,8 +139,8 @@ void dispose() {
               // Campo Nombre de usuario ------------ (Integración Pendiente)
               _RoundedTextField(
                 hintText: 'Nombre de usuario',
-                controller: ,
-                keyboardType: ,
+                controller: _userNameController,
+                keyboardType: TextInputType.text,
               ),
               const SizedBox(height: 16),
               // Campo gmail ---------------
