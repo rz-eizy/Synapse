@@ -28,7 +28,10 @@ public class CustomUserDetails implements UserDetails {
     @Override
     public String getUsername() {
         // Se usa el email como nombre de usuario para autenticacion
-        return user.getUsername();
+        return user.getEmail();
+    }
+    public Long getId(){
+        return user.getId();
     }
 
     // Estos metodos pueden ser cambiados mas adelante para reflejar el status de los usuarios

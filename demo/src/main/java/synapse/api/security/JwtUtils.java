@@ -34,8 +34,12 @@ public class JwtUtils {
     }
 
     public String generateToken(UserDetails userD) {
+        String subject = userD.getUsername();
+        if (userD instanceof CustomUserDetails customUser) {
+            subject = customUser.getUsername();           
+        }
         return Jwts.builder()
-                .setSubject(userD.getUsername())
+                .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + jwtConfig.getExpiration()))
                 .signWith(getSignInKey(), SignatureAlgorithm.HS512)
