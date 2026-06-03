@@ -1,5 +1,7 @@
 package synapse.api.model;
 
+import java.time.LocalDateTime;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
@@ -22,7 +24,7 @@ public class User {
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY) 
     private Long id;
 
-    @Column(nullable = false, length = 50)
+    @Column(length = 50)
     private String username;
 
     @Column(nullable = false, unique = true, length = 100)
@@ -31,4 +33,14 @@ public class User {
     @Column(nullable = false, length = 255)
     @JsonIgnore
     private String password;
+
+    private String role;
+
+    private String profilePictureUrl;
+    
+    private String region;
+
+    private Boolean isBlocked = false;
+
+    private LocalDateTime createdAt = LocalDateTime.now();
 }
