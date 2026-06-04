@@ -1,5 +1,7 @@
 package synapse.api.repository;
 
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,14 +12,15 @@ import synapse.api.model.Publication;
 
 @Repository
 public interface PublicationRepository extends JpaRepository<Publication, Long>{
+    @Query("SELECT p FROM Publication p JOIN FETCH p.author WHERE p.id = :id")
+    Optional<Publication> findByIdWithAuthor(@Param("id") Long id);
     
-    @Query("SELECT p FROM Publication p WHERE (:regionTag IS NOT NULL OR p.regionTag = :regionTag) " +
-            "AND (:authorId IS NULL OR p.author.id = :authorId) " +
-            "AND (:authorName IS NULL OR LOWER(p.author.username) LIKE LOWER(CONCAT('%', :authorName, '%')))")
+    @Query("SELECT p FROM Publication p JOIN FETCH p.author " +
+           "WHERE (:regionTag IS NULL OR p.regionTag = :regionTag) " +
+           "AND (:authorId IS NULL OR p.author.id = :authorId)")
     Page<Publication> findPublicationByFilters(
         @Param("regionTag") String regionTag,
         @Param("authorId") Long authorId,
-        @Param("authorName") String authorName,
         Pageable pageable
     );
 }

@@ -27,6 +27,7 @@ public class PublicationService {
         this.userRepository = user;
     }
 
+    @Transactional
     public Publication createPublication(PublicationDTO dto, Long authorId){
         User author = userRepository.findById(authorId)
             .orElseThrow(() -> new IllegalArgumentException("usuario no identificado con id: " + authorId));
@@ -41,13 +42,24 @@ public class PublicationService {
         return repository.save(publication);
     }
 
-    public Page<Publication> getFilteredPublications(String regionTag, Long authorId, String authorName, int page, int size){
+    public Page<Publication> getFilteredPublications(String regionTag, Long authorId, int page, int size){
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        String nameFilter = (authorName != null && !authorName.isBlank()) ? authorName : null;
-        return repository.findPublicationByFilters(regionTag, authorId, nameFilter, pageable);
+        return repository.findPublicationByFilters(regionTag, authorId, pageable);
     }
 
     public Publication findById(Long id){
-        return repository.findById(id).orElse(null);
+        return repository.findByIdWithAuthor(id)
+            .orElseThrow(() -> new RuntimeException("Publicacion no encontrada"));
+    }
+    
+    @Transactional
+    public void handleLike(Long publicationId, boolean isLike) {
+        Publication publication = findById(publicationId);
+        if (isLike) {
+            publication.incrementLikes();
+        } else {
+            publication.decrementLikes();
+        }
+        repository.save(publication);
     }
 }
