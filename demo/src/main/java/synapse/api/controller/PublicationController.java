@@ -63,6 +63,18 @@ public class PublicationController {
         Publication publication = publicationService.findById(idPublication);
         return publication != null ? ResponseEntity.ok(publication) : ResponseEntity.notFound().build();
     }
+    /* 
+        Dar like o quitar like de una publicacion
+    */
+    @PostMapping("/{idPublication}/like")
+    public ResponseEntity<Publication> postMethodName(
+        @PathVariable Long idPublication,
+        @RequestParam boolean isLike
+    ) {
+        publicationService.handleLike(idPublication, isLike);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+    
 
     /* 
         Obtener publicaciones paginadas 20 max
@@ -75,12 +87,11 @@ public class PublicationController {
     public ResponseEntity<Page<Publication>> getGeneralFeed(
         @RequestParam("region") String region,
         @RequestParam(value = "authorId", required = false) Long authorId,
-        @RequestParam(value = "authorName", required = false) String authorName,
         @RequestParam(value = "page", defaultValue = "0") int page,
         @RequestParam(value = "size", defaultValue = "20") int size 
     ) {
         if (region == null || region.isBlank()) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        Page<Publication> feed = publicationService.getFilteredPublications(region, authorId, authorName, page, size);
+        Page<Publication> feed = publicationService.getFilteredPublications(region, authorId, page, size);
         return ResponseEntity.ok(feed); 
     }
 }
