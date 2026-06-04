@@ -1,0 +1,97 @@
+package synapse.api.controller;
+
+import jakarta.validation.Valid;
+import synapse.api.dto.PublicationDTO;
+import synapse.api.model.Publication;
+
+import synapse.api.security.CustomUserDetails;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+
+import synapse.api.service.PublicationService;
+import synapse.api.service.external.CloudflareR2Service;
+
+import java.util.Map;
+
+import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
+@RestController
+@RequestMapping("/api/publication")
+public class PublicationController {
+    private final PublicationService publicationService;
+    private final CloudflareR2Service cloudflareService;
+
+    public PublicationController(
+        PublicationService publicationService, 
+        CloudflareR2Service cloudflareService
+    ) {
+        this.publicationService = publicationService;
+        this.cloudflareService = cloudflareService;
+    }
+    
+    @GetMapping("/upload-url")
+    public ResponseEntity<Map<String, String>> getUploadUrl(@RequestParam("contentType") String contentType) {
+        String presignedUrl = cloudflareService.generatePresignedUploadUrl(contentType);
+        return ResponseEntity.ok(Map.of("uploadUrl", presignedUrl));
+    }
+    
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Publication> postNewPublication(
+        @RequestBody @Valid PublicationDTO dataDto,
+        @AuthenticationPrincipal CustomUserDetails principal
+    ) {
+        Long authorId = principal.getId();
+        Publication savedPublication = publicationService.createPublication(dataDto, authorId);
+        return new ResponseEntity<>(savedPublication, HttpStatus.CREATED);
+    }
+    
+    /* 
+        Obtener 1 publicacion (cuando se hace clic)
+    */
+    @GetMapping("/{idPublication}")
+    public ResponseEntity<Publication> getPublication(@PathVariable Long idPublication) {
+        Publication publication = publicationService.findById(idPublication);
+        return publication != null ? ResponseEntity.ok(publication) : ResponseEntity.notFound().build();
+    }
+    /* 
+        Dar like o quitar like de una publicacion
+    */
+    @PostMapping("/{idPublication}/like")
+    public ResponseEntity<Publication> postMethodName(
+        @PathVariable Long idPublication,
+        @RequestParam boolean isLike
+    ) {
+        publicationService.handleLike(idPublication, isLike);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+    
+
+    /* 
+        Obtener publicaciones paginadas 20 max
+        Dichas publicaciónes seleccionar en base a:
+            - Mas cercanas a la fecha actual
+            - ubicación
+            - intereses del usuario
+    */
+    @GetMapping("/feed")
+    public ResponseEntity<Page<Publication>> getGeneralFeed(
+        @RequestParam("region") String region,
+        @RequestParam(value = "authorId", required = false) Long authorId,
+        @RequestParam(value = "page", defaultValue = "0") int page,
+        @RequestParam(value = "size", defaultValue = "20") int size 
+    ) {
+        if (region == null || region.isBlank()) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        Page<Publication> feed = publicationService.getFilteredPublications(region, authorId, page, size);
+        return ResponseEntity.ok(feed); 
+    }
+}
