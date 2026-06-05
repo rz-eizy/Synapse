@@ -1,8 +1,7 @@
 package synapse.api.service;
 
 import java.time.LocalDateTime;
-
-import synapse.api.model.User;
+import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -13,6 +12,7 @@ import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 import synapse.api.dto.PublicationDTO;
 import synapse.api.model.Publication;
+import synapse.api.model.User;
 import synapse.api.repository.PublicationRepository;
 import synapse.api.repository.UserRepository;
 
@@ -28,7 +28,7 @@ public class PublicationService {
     }
 
     @Transactional
-    public Publication createPublication(PublicationDTO dto, Long authorId){
+    public Publication createPublication(PublicationDTO dto, UUID authorId){
         User author = userRepository.findById(authorId)
             .orElseThrow(() -> new IllegalArgumentException("usuario no identificado con id: " + authorId));
         
