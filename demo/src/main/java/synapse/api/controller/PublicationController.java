@@ -1,27 +1,29 @@
 package synapse.api.controller;
 
+import jakarta.validation.Valid;
+import synapse.api.dto.PublicationDTO;
+import synapse.api.model.Publication;
+
+import synapse.api.security.CustomUserDetails;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+
+import synapse.api.service.PublicationService;
+import synapse.api.service.external.CloudflareR2Service;
+
 import java.util.Map;
-import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import jakarta.validation.Valid;
-import synapse.api.dto.PublicationDTO;
-import synapse.api.model.Publication;
-import synapse.api.security.CustomUserDetails;
-import synapse.api.service.PublicationService;
-import synapse.api.service.external.CloudflareR2Service;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
 @RequestMapping("/api/publication")
@@ -48,7 +50,7 @@ public class PublicationController {
         @RequestBody @Valid PublicationDTO dataDto,
         @AuthenticationPrincipal CustomUserDetails principal
     ) {
-        UUID authorId = principal.getId();
+        Long authorId = principal.getId();
         Publication savedPublication = publicationService.createPublication(dataDto, authorId);
         return new ResponseEntity<>(savedPublication, HttpStatus.CREATED);
     }

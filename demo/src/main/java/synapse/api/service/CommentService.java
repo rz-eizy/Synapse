@@ -1,7 +1,5 @@
 package synapse.api.service;
 
-import java.util.UUID;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -32,7 +30,7 @@ public class CommentService {
         this.userRepository = userRepository;
     }
     @Transactional
-    public Comment addComment(UUID publicationId, UUID authorId, String content){
+    public Comment addComment(Long publicationId, Long authorId, String content){
         Publication publication = publicacionrepository.findById(publicationId)
                 .orElseThrow(() -> new RuntimeException("Publicacion no encontrada"));
         User user = userRepository.findById(authorId)
@@ -46,7 +44,7 @@ public class CommentService {
         return repository.save(newComment);
     }
 
-    public Page<Comment> findPublicationComents(UUID publicationId, int page, int size){
+    public Page<Comment> findPublicationComents(Long publicationId, int page, int size){
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         return repository.findByPublicationIdWithAuthor(publicationId, pageable);
     }
