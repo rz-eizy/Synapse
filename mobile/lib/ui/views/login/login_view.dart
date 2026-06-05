@@ -44,8 +44,6 @@ class _LoginViewState extends State<LoginView> {
       );
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> responseData = jsonDecode(response.body);
-        final String token = responseData['token'] ?? '';
         if (mounted) {
           Navigator.pushReplacementNamed(context, '/home');
         }

@@ -1,17 +1,19 @@
 package synapse.api.dto;
 
-import synapse.api.model.User;
+import java.util.UUID;
+
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import synapse.api.model.User;
 
 @Getter
 @Setter
 @NoArgsConstructor
 public class UserDTO {
-    private Long id;
+    private UUID id;
     @NotBlank
     private String name;
     @Email
