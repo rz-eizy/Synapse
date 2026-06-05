@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../widgets/professional_card.dart';
-import '../../../core/services/publicationService.dart';
-import '../../../core/models/publicationModel.dart';
 import '../account/account_view.dart';
 import '../../widgets/community_card.dart';
 
@@ -17,17 +15,17 @@ class _TourStep {
     required this.highlightRect,
   });
 }
-
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
 
   @override
   State<HomeView> createState() => _HomeViewState();
 }
-
 class _HomeViewState extends State<HomeView> {
   int _selectedTab = 0;
   int _selectedNav = 0;
+
+  final _comunidadListKey = GlobalKey<_ComunidadListState>();
 
   // Tour ----------------
   // reemplazar con SharedPreferences para mostrarlo solo la primera vez (para testing queda asi momentáneamente)
@@ -38,38 +36,6 @@ class _HomeViewState extends State<HomeView> {
   final _keyTabs = GlobalKey();
   final _keyFirstCard = GlobalKey();
   final _keyBottomNav = GlobalKey();
-
-  final PublicationApiService _apiService = PublicationApiService();
-  
-  Future<List<PublicationModel>>? _publicationsFuture;
-  String _currentTab = 'PROFESSIONALS';
-  String _userToken = '';
-  
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // 3. Extrae el token enviado desde el Login de forma segura al inicializar el contexto
-    if (_userToken.isEmpty) {
-      final args = ModalRoute.of(context)?.settings.arguments;
-      if (args != null && args is String) {
-        _userToken = args;
-        _loadPublications();
-      }
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _loadPublications();
-  }
-
-  void _loadPublications() {
-    if (_userToken.isEmpty) return;
-    setState(() {
-      _publicationsFuture = _apiService.fetchPublications(_userToken, _currentTab);
-    });
-  }
 
   // Construye los pasos una vez que el layout ya existe -------------------
   List<_TourStep> _buildSteps() {
@@ -133,6 +99,260 @@ class _HomeViewState extends State<HomeView> {
     ];
   }
 
+  // despliegue view crear publicaciòn ------------------------
+  void _openPublishSheet() {
+    final contentController = TextEditingController();
+    final hashtagController = TextEditingController();
+    bool canPublish = false;
+    int charCount = 0;
+    const int maxChars = 280;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            contentController.addListener(() {
+              setSheetState(() {
+                charCount = contentController.text.length;
+                canPublish = contentController.text.trim().isNotEmpty &&
+                    charCount <= maxChars;
+              });
+            });
+
+            final bottomInset = MediaQuery.of(ctx).viewInsets.bottom;
+            final remaining = maxChars - charCount;
+            final isNearLimit = remaining <= 20;
+
+            return Container(
+              padding: EdgeInsets.fromLTRB(0, 12, 0, bottomInset + 12),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // handle -------------
+                  Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryLight,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+
+                  // barra superior ---------------
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 10),
+                    child: Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () => Navigator.pop(sheetContext),
+                          child: const Text(
+                            'Cancelar',
+                            style: TextStyle(
+                              fontSize: 15,
+                              color: AppColors.textMuted,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        const Spacer(),
+                        // Botón pill estilo X
+                        AnimatedOpacity(
+                          opacity: canPublish ? 1.0 : 0.45,
+                          duration: const Duration(milliseconds: 180),
+                          child: GestureDetector(
+                            onTap: canPublish
+                                ? () {
+                                    final rawTags =
+                                        hashtagController.text.trim();
+                                    final tags = rawTags.isEmpty
+                                        ? <String>[]
+                                        : rawTags
+                                            .split(RegExp(r'\s+'))
+                                            .where((t) => t.isNotEmpty)
+                                            .map((t) => t.startsWith('#')
+                                                ? t
+                                                : '#$t')
+                                            .toList();
+
+                                    final now = DateTime.now();
+                                    final date =
+                                        '${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year.toString().substring(2)}';
+
+                                    final newPost = _CommunityPost(
+                                      userName: 'Tú',
+                                      userImageUrl: '',
+                                      date: date,
+                                      content: contentController.text.trim(),
+                                      hashtags: tags,
+                                    );
+
+                                    Navigator.pop(sheetContext);
+                                    setState(() {
+                                      _selectedTab = 1;
+                                      _selectedNav = 0;
+                                    });
+                                    WidgetsBinding.instance
+                                        .addPostFrameCallback((_) {
+                                      _comunidadListKey.currentState
+                                          ?.addPost(newPost);
+                                    });
+                                  }
+                                : null,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: const Text(
+                                'Publicar',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.2,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const Divider(height: 1, color: Color(0xFFEEE5F5)),
+
+                  // area de escritura con avatar perfil ------------------
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Avatar
+                        const CircleAvatar(
+                          radius: 20,
+                          backgroundColor: AppColors.primaryLight,
+                          child: Icon(Icons.person,
+                              size: 20, color: AppColors.primary),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Campo contenido ------------------
+                              TextField(
+                                controller: contentController,
+                                maxLines: 6,
+                                minLines: 3,
+                                maxLength: maxChars,
+                                buildCounter: (_, {required currentLength,
+                                        required isFocused,
+                                        maxLength}) =>
+                                    null,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  color: AppColors.textPrimary,
+                                  height: 1.45,
+                                ),
+                                decoration: const InputDecoration(
+                                  hintText:
+                                      '¿Qué estás pensando?',
+                                  hintStyle: TextStyle(
+                                    color: AppColors.textMuted,
+                                    fontSize: 16,
+                                  ),
+                                  border: InputBorder.none,
+                                  contentPadding: EdgeInsets.zero,
+                                  isDense: true,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+
+                              // Separador hashtags ---------------
+                              const Divider(
+                                  height: 1, color: Color(0xFFEEE5F5)),
+                              const SizedBox(height: 8),
+
+                              // Campo hashtags -----------
+                              Row(
+                                children: [
+                                  const Icon(Icons.tag,
+                                      size: 16, color: AppColors.primary),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: TextField(
+                                      controller: hashtagController,
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        color: AppColors.primary,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      decoration: const InputDecoration(
+                                        hintText:
+                                            'Agrega hashtags  (ej: Comunidad Appoyo)',
+                                        hintStyle: TextStyle(
+                                          color: AppColors.textMuted,
+                                          fontSize: 14,
+                                        ),
+                                        border: InputBorder.none,
+                                        contentPadding: EdgeInsets.zero,
+                                        isDense: true,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // barra inferior (contador de caràcteres) -----------------
+                  const Divider(height: 1, color: Color(0xFFEEE5F5)),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 10),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Text(
+                          '$remaining',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: isNearLimit
+                                ? (remaining < 0
+                                    ? Colors.red
+                                    : Colors.orange)
+                                : AppColors.textMuted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   void _nextStep() {
     final steps = _buildSteps();
     if (_tourStep < steps.length - 1) {
@@ -169,7 +389,7 @@ class _HomeViewState extends State<HomeView> {
               ),
             ),
             centerTitle: false,
-             actions: const [
+            actions: [
               Padding(
                 padding: const EdgeInsets.only(right: 16),
                 child: GestureDetector(
@@ -196,73 +416,29 @@ class _HomeViewState extends State<HomeView> {
               _TabSelector(
                 key: _keyTabs,
                 selectedTab: _selectedTab,
-                onTabChanged: (index) {
-                  setState(() {
-                    _selectedTab = index;
-                    _currentTab = (index == 0) ? 'PROFESSIONALS' : 'COMMUNITY';
-                  });
-                  _loadPublications();
-                },
+                onTabChanged: (i) => setState(() => _selectedTab = i),
               ),
               const SizedBox(height: 8),
-
               Expanded(
-                child: FutureBuilder<List<PublicationModel>>(
-                  future: _publicationsFuture,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    } else if (snapshot.hasError) {
-                      return Center(child: Text('Error: ${snapshot.error}'));
-                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return const Center(
-                        child: Text('No hay publicaciones disponibles en esta sección.'),
-                      );
-                    }
-
-                    final publicaciones = snapshot.data!;
-                    
-                    return ListView.builder(
-                      padding: const EdgeInsets.only(top: 4, bottom: 16),
-                      itemCount: publicaciones.length,
-                      itemBuilder: (context, index) {
-                        final pub = publicaciones[index];
-                        final isFirst = index == 0;
-
-                        if (_selectedTab == 0) {
-                          return ProfessionalCard(
-                            key: isFirst ? _keyFirstCard : null,
-                            name: pub.authorName,
-                            handle: '@${pub.authorRole.toLowerCase()}',
-                            profession: pub.authorRole == 'PROFESSIONAL' ? 'Especialista Acreditado' : 'Usuario',
-                            imageUrl: pub.imageUrl ?? '',
-                            date: '${pub.createdAt.day}/${pub.createdAt.month}/${pub.createdAt.year}',
-                            description: pub.content,
-                            hashtags: const ['#Acreditado', '#Salud'],
-                          );
-                        } else {
-                          return CommunityCard(
-                            key: isFirst ? _keyFirstCard : null,
-                            userName: pub.authorName,
-                            userImageUrl: '',
-                            date: '${pub.createdAt.day}/${pub.createdAt.month}/${pub.createdAt.year}',
-                            content: pub.content,
-                            hashtags: const ['#Comunidad', '#Apoyo'],
-                            commentCount: 0,
-                            likeCount: pub.likesCount,
-                          );
-                        }
-                      },
-                    );
-                  },
-                ),
+                child: _selectedTab == 0
+                    ? _ProfessionalesList(firstCardKey: _keyFirstCard)
+                    : _ComunidadList(
+                        key: _comunidadListKey,
+                        firstCardKey: _keyFirstCard,
+                      ),
               ),
             ],
           ),
           bottomNavigationBar: _BottomNav(
             key: _keyBottomNav,
             selectedIndex: _selectedNav,
-            onTap: (i) => setState(() => _selectedNav = i),
+            onTap: (i) {
+              if (i == 1) {
+                _openPublishSheet();
+              } else {
+                setState(() => _selectedNav = i);
+              }
+            },
           ),
         ),
 
@@ -573,6 +749,124 @@ class _Tab extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _ProfessionalesList extends StatelessWidget {
+  final GlobalKey? firstCardKey;
+  const _ProfessionalesList({this.firstCardKey});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.only(top: 4, bottom: 16),
+      children: [
+        ProfessionalCard(
+          key: firstCardKey,
+          name: 'Nathalie Espinoza',
+          handle: '@Psicóloga',
+          profession: 'Psicóloga Clínica',
+          imageUrl: '',
+          date: '01/05/26',
+          description:
+              'Soy Psicóloga Clínica, titulada de la Pontificia Universidad Católica de Chile, especializada en la atención de pacientes adultos.',
+          hashtags: const ['#Psicoanálisis', '#Videollamada', '#Presencial'],
+        ),
+        const ProfessionalCard(
+          name: 'Juan José Roca',
+          handle: '@Psiquiatra',
+          profession: 'Psiquiatra',
+          imageUrl: '',
+          date: '29/04/26',
+          description:
+              'Soy psiquiatra de la Universidad de Chile y mi enfoque está centrado en el tratamiento de trastornos del ánimo y ansiedad.',
+          hashtags: ['#Psiquiatría', '#Presencial'],
+        ),
+      ],
+    );
+  }
+}
+
+// modelo de datos para publicaciones de comunidad -------------
+class _CommunityPost {
+  final String userName;
+  final String userImageUrl;
+  final String date;
+  final String content;
+  final List<String> hashtags;
+
+  const _CommunityPost({
+    required this.userName,
+    required this.userImageUrl,
+    required this.date,
+    required this.content,
+    this.hashtags = const [],
+  });
+}
+
+// lista de comunidad ----------------------
+class _ComunidadList extends StatefulWidget {
+  final GlobalKey? firstCardKey;
+  const _ComunidadList({super.key, this.firstCardKey});
+
+  @override
+  State<_ComunidadList> createState() => _ComunidadListState();
+}
+
+class _ComunidadListState extends State<_ComunidadList> {
+  final List<_CommunityPost> _posts = [
+    const _CommunityPost(
+      userName: 'Eloy Prado',
+      userImageUrl: '',
+      date: '29/04/26',
+      content: '¡Feliz fin de semana! 😄 Que Diosito los bendiga hoy y siempre. Un abracito virtual 🤗',
+      hashtags: ['#Appoyo', '#BuenosDías', '#Amor'],
+    ),
+    const _CommunityPost(
+      userName: 'Tomás Suárez',
+      userImageUrl: '',
+      date: '27/04/26',
+      content: 'Alguien sabe como hacer arroz con pollo? esque se me quemo el que estaba cocinando',
+      hashtags: ['#Comunidad'],
+    ),
+    const _CommunityPost(
+      userName: 'Camila Echeverria',
+      userImageUrl: '',
+      date: '01/05/26',
+      content: 'hola, mi nombre es Cami y me presento tanto a mi como a mi niño Daniel. Buen día.',
+      hashtags: ['#Appoyo', '#BuenosDías', '#Amor'],
+    ),
+    const _CommunityPost(
+      userName: 'Mariane Sanchez',
+      userImageUrl: '',
+      date: '30/04/26',
+      content: 'Busco ayuda para resolver unas dudas, alguien que pueda orientarme?',
+      hashtags: ['#Comunidad'],
+    ),
+  ];
+
+  // Agrega un nuevo post al inicio de la lista ----------------
+  void addPost(_CommunityPost post) {
+    setState(() => _posts.insert(0, post));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      padding: const EdgeInsets.only(top: 4, bottom: 16),
+      itemCount: _posts.length,
+      itemBuilder: (context, i) {
+        final p = _posts[i];
+        return CommunityCard(
+          key: i == 0 ? widget.firstCardKey : null,
+          userName: p.userName,
+          userImageUrl: p.userImageUrl,
+          date: p.date,
+          content: p.content,
+          hashtags: p.hashtags,
+        );
+      },
     );
   }
 }
