@@ -1,0 +1,10 @@
+services:
+  db:
+    image: postgres:14.22-trixie
+    container_name: baseDeDatosPostgres
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
