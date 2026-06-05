@@ -873,10 +873,13 @@ class _ComunidadListState extends State<_ComunidadList> {
             final p = posts[i];
             return CommunityCard(
               key: i == 0 ? widget.firstCardKey : null,
+              id: p.id,
               userName: p.authorName,
               userImageUrl: p.imageUrl ?? '',
               date: '${p.createdAt.day}/${p.createdAt.month}/${p.createdAt.year}',
               content: p.content,
+              commentCount: 0,
+              likeCount: p.likesCount,
               hashtags: const [],
             );
           },

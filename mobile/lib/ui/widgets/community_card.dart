@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../widgets/comments_sheet.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../../core/services/commentService.dart';
+import '../../core/models/commentModel.dart';
+import '../../core/services/publicationService.dart';
 
 class CommunityCard extends StatefulWidget {
+  final String? id;
   final String userName;
   final String userImageUrl;
   final String date;
@@ -13,6 +18,7 @@ class CommunityCard extends StatefulWidget {
 
   const CommunityCard({
     super.key,
+    this.id,
     required this.userName,
     required this.userImageUrl,
     required this.date,
@@ -29,36 +35,102 @@ class CommunityCard extends StatefulWidget {
 class _CommunityCardState extends State<CommunityCard> {
   late int _likes;
   bool _liked = false;
-  late List<AppComment> _comments;
+  
+  late int _commentCountLocal; 
+  final _storage = const FlutterSecureStorage();
+  final _commentApiService = CommentApiService();
+  final _apiService = PublicationApiService();
+  
 
   @override
   void initState() {
     super.initState();
     _likes = widget.likeCount;
-    // Comentarios de ejemplo pre-cargados
-    _comments = List.generate(
-      widget.commentCount,
-      (i) => AppComment(
-        author: 'Usuario $i',
-        text: 'Comentario de ejemplo $i',
-        time: 'hace 1h',
-      ),
-    );
+    _commentCountLocal = widget.commentCount;
   }
 
-  void _toggleLike() => setState(() {
-    _liked = !_liked;
-    _likes += _liked ? 1 : -1;
-  });
+  Future<void> _toggleLike() async {
+    final bool nuevoEstadoLike = !_liked;
 
-  void _openComments() {
+    setState(() {
+      _liked = nuevoEstadoLike;
+      _likes += nuevoEstadoLike ? 1 : -1;
+    });
+
+    final String token = await _storage.read(key: 'jwt_token') ?? '';
+    final String publicationId = widget.id ?? '';
+
+    if (token.isEmpty || publicationId.isEmpty) {
+      return;
+    }
+
+    bool success = await _apiService.toggleLike(token, publicationId, nuevoEstadoLike);
+
+    if (!success) {
+      setState(() {
+        _liked = !_liked;
+        _likes += _liked ? 1 : -1;
+      });
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error de red: No se pudo registrar el like.')),
+      );
+    }
+  }
+
+  Future<void> _openComments() async {
+    final String token = await _storage.read(key: 'jwt_token') ?? '';
+    final String publicationId = widget.id ?? '';
+
+    if (token.isEmpty || publicationId.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sesión inválida o error de publicación.')),
+      );
+      return;
+    }
+
+    List<CommentModel> serverComments = [];
+    try {
+      serverComments = await _commentApiService.fetchComments(token, publicationId);
+    } catch (e) {
+      debugPrint("Error al descargar comentarios: $e");
+    }
+
+    List<AppComment> uiComments = serverComments.map((c) {
+      return AppComment(
+        author: c.authorName,
+        text: c.content,
+        time: 'hace poco', 
+      );
+    }).toList();
+
+    if (!mounted) return;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => CommentsSheet(
-        initialComments: _comments,
-        onCommentAdded: (c) => setState(() => _comments.add(c)),
+      builder: (sheetContext) => CommentsSheet(
+        initialComments: uiComments,
+        onCommentAdded: (newUiComment) async {
+          bool isSaved = await _commentApiService.addComment(
+            token,
+            publicationId,
+            newUiComment.text,
+          );
+
+          if (isSaved) {
+            setState(() {
+              _commentCountLocal++;
+            });
+          } else {
+            if (!sheetContext.mounted) return;
+            ScaffoldMessenger.of(sheetContext).showSnackBar(
+              const SnackBar(content: Text('Error del servidor: No se pudo guardar el comentario.')),
+            );
+          }
+        },
       ),
     );
   }
@@ -82,7 +154,7 @@ class _CommunityCardState extends State<CommunityCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // header -----------
+          // Header -----------
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -117,14 +189,14 @@ class _CommunityCardState extends State<CommunityCard> {
             ],
           ),
           const SizedBox(height: 12),
- 
-          //contenido ----------
+
+          // Contenido ----------
           Text(
             widget.content,
             style: const TextStyle(fontSize: 14, color: AppColors.textPrimary, height: 1.5),
           ),
- 
-          // hashtags --------------
+
+          // Hashtags --------------
           if (widget.hashtags.isNotEmpty) ...[
             const SizedBox(height: 8),
             Wrap(
@@ -141,13 +213,10 @@ class _CommunityCardState extends State<CommunityCard> {
                   .toList(),
             ),
           ],
- 
+
           const SizedBox(height: 12),
- 
-          // acciones ----------------
           Row(
             children: [
-              // Comentarios
               GestureDetector(
                 onTap: _openComments,
                 child: Row(
@@ -155,14 +224,13 @@ class _CommunityCardState extends State<CommunityCard> {
                     const Icon(Icons.chat_bubble_outline, size: 18, color: AppColors.textMuted),
                     const SizedBox(width: 4),
                     Text(
-                      '${_comments.length}',
+                      '$_commentCountLocal',
                       style: const TextStyle(fontSize: 13, color: AppColors.textMuted),
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: 16),
-              // likes
               GestureDetector(
                 onTap: _toggleLike,
                 child: Row(
@@ -187,5 +255,3 @@ class _CommunityCardState extends State<CommunityCard> {
     );
   }
 }
- 
- 
