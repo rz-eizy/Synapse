@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../widgets/professional_card.dart';
+import '../account/account_view.dart';
 import '../../widgets/community_card.dart';
 
 class _TourStep {
@@ -137,10 +138,21 @@ class _HomeViewState extends State<HomeView> {
             actions: [
               Padding(
                 padding: const EdgeInsets.only(right: 16),
-                child: CircleAvatar(
-                  radius: 18,
-                  backgroundColor: AppColors.primaryLight,
-                  backgroundImage: const NetworkImage(''),
+                child: GestureDetector(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AccountView()),
+                  ),
+                  child: CircleAvatar(
+                    radius: 18,
+                    backgroundColor: AppColors.primaryLight,
+                    // TESTING ------ (reemplazar con imagen real del usuario)
+                    child: const Icon(
+                      Icons.person,
+                      size: 18,
+                      color: AppColors.primary,
+                    ),
+                  ),
                 ),
               ),
             ],

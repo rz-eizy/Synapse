@@ -1,17 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
-
-class _Comment {
-  final String author;
-  final String text;
-  final String time;
-
-  const _Comment({
-    required this.author,
-    required this.text,
-    required this.time,
-  });
-}
+import '../widgets/comments_sheet.dart';
 
 class CommunityCard extends StatefulWidget {
   final String userName;
@@ -40,7 +29,7 @@ class CommunityCard extends StatefulWidget {
 class _CommunityCardState extends State<CommunityCard> {
   late int _likes;
   bool _liked = false;
-  late List<_Comment> _comments;
+  late List<AppComment> _comments;
 
   @override
   void initState() {
@@ -49,7 +38,7 @@ class _CommunityCardState extends State<CommunityCard> {
     // Comentarios de ejemplo pre-cargados
     _comments = List.generate(
       widget.commentCount,
-      (i) => _Comment(
+      (i) => AppComment(
         author: 'Usuario $i',
         text: 'Comentario de ejemplo $i',
         time: 'hace 1h',
@@ -67,8 +56,7 @@ class _CommunityCardState extends State<CommunityCard> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _CommentsSheet(
-        postAuthor: widget.userName,
+      builder: (_) => CommentsSheet(
         initialComments: _comments,
         onCommentAdded: (c) => setState(() => _comments.add(c)),
       ),
@@ -200,240 +188,4 @@ class _CommunityCardState extends State<CommunityCard> {
   }
 }
  
-// botón de comentarios ----------------
-class _CommentsSheet extends StatefulWidget {
-  final String postAuthor;
-  final List<_Comment> initialComments;
-  final ValueChanged<_Comment> onCommentAdded;
  
-  const _CommentsSheet({
-    required this.postAuthor,
-    required this.initialComments,
-    required this.onCommentAdded,
-  });
- 
-  @override
-  State<_CommentsSheet> createState() => _CommentsSheetState();
-}
- 
-class _CommentsSheetState extends State<_CommentsSheet> {
-  final _controller = TextEditingController();
-  final _focusNode = FocusNode();
-  late List<_Comment> _comments;
-  bool _canSend = false;
- 
-  @override
-  void initState() {
-    super.initState();
-    _comments = List.from(widget.initialComments);
-    _controller.addListener(() {
-      setState(() => _canSend = _controller.text.trim().isNotEmpty);
-    });
-  }
- 
-  @override
-  void dispose() {
-    _controller.dispose();
-    _focusNode.dispose();
-    super.dispose();
-  }
- 
-  void _submit() {
-    final text = _controller.text.trim();
-    if (text.isEmpty) return;
- 
-    final newComment = _Comment(author: 'Tú', text: text, time: 'ahora');
-    setState(() => _comments.add(newComment));
-    widget.onCommentAdded(newComment);
-    _controller.clear();
-  }
- 
-  @override
-  Widget build(BuildContext context) {
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
- 
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.75,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: Column(
-        children: [
-          //handle -------------
-          const SizedBox(height: 12),
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: AppColors.primaryLight,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(height: 16),
- 
-          //titulo --------------
-          const Text(
-            'Comentarios',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const Divider(height: 20, color: Color(0xFFEEE5F5)),
- 
-          //lista de comentarios -------------
-          Expanded(
-            child: _comments.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.chat_bubble_outline,
-                            size: 48, color: AppColors.primaryLight),
-                        const SizedBox(height: 12),
-                        const Text(
-                          'Sé el primero en comentar',
-                          style: TextStyle(color: AppColors.textMuted, fontSize: 14),
-                        ),
-                      ],
-                    ),
-                  )
-                : ListView.separated(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: _comments.length,
-                    separatorBuilder: (_, __) =>
-                        const Divider(height: 1, color: Color(0xFFEEE5F5)),
-                    itemBuilder: (_, i) => _CommentTile(comment: _comments[i]),
-                  ),
-          ),
- 
-          // input para nuevo comentario --------------------
-          Padding(
-            padding: EdgeInsets.fromLTRB(16, 8, 16, bottomInset + 16),
-            child: Row(
-              children: [
-                // Avatar propio (placeholder)
-                const CircleAvatar(
-                  radius: 18,
-                  backgroundColor: AppColors.primaryLight,
-                  child: Icon(Icons.person, size: 18, color: AppColors.primary),
-                ),
-                const SizedBox(width: 10),
- 
-                // Campo de texto
-                Expanded(
-                  child: TextField(
-                    controller: _controller,
-                    focusNode: _focusNode,
-                    textInputAction: TextInputAction.send,
-                    onSubmitted: (_) => _submit(),
-                    style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
-                    decoration: InputDecoration(
-                      hintText: 'Añade un comentario...',
-                      hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 14),
-                      filled: true,
-                      fillColor: AppColors.surface,
-                      contentPadding:
-                          const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(24),
-                        borderSide: BorderSide.none,
-                      ),
-                      // Botón "Publicar" dentro del campo
-                      suffixIcon: _canSend
-                          ? GestureDetector(
-                              onTap: _submit,
-                              child: const Padding(
-                                padding: EdgeInsets.only(right: 12),
-                                child: Text(
-                                  'Publicar',
-                                  style: TextStyle(
-                                    color: AppColors.primary,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ),
-                            )
-                          : null,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
- 
-//  tile de comentario --------------------------
-class _CommentTile extends StatelessWidget {
-  final _Comment comment;
-  const _CommentTile({required this.comment});
- 
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Avatar
-          CircleAvatar(
-            radius: 18,
-            backgroundColor: AppColors.primaryLight,
-            child: Text(
-              comment.author.isNotEmpty ? comment.author[0].toUpperCase() : '?',
-              style: const TextStyle(
-                color: AppColors.primary,
-                fontWeight: FontWeight.bold,
-                fontSize: 13,
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
- 
-          // Texto
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                RichText(
-                  text: TextSpan(
-                    children: [
-                      TextSpan(
-                        text: '${comment.author} ',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      TextSpan(
-                        text: comment.text,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: AppColors.textPrimary,
-                          height: 1.4,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  comment.time,
-                  style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
