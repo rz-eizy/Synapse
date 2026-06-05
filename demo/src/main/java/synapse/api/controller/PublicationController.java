@@ -57,7 +57,7 @@ public class PublicationController {
         Obtener 1 publicacion (cuando se hace clic)
     */
     @GetMapping("/{idPublication}")
-    public ResponseEntity<Publication> getPublication(@PathVariable Long idPublication) {
+    public ResponseEntity<Publication> getPublication(@PathVariable UUID idPublication) {
         Publication publication = publicationService.findById(idPublication);
         return publication != null ? ResponseEntity.ok(publication) : ResponseEntity.notFound().build();
     }
@@ -66,7 +66,7 @@ public class PublicationController {
     */
     @PostMapping("/{idPublication}/like")
     public ResponseEntity<Publication> postMethodName(
-        @PathVariable Long idPublication,
+        @PathVariable UUID idPublication,
         @RequestParam boolean isLike
     ) {
         publicationService.handleLike(idPublication, isLike);
@@ -84,7 +84,7 @@ public class PublicationController {
     @GetMapping("/feed")
     public ResponseEntity<Page<Publication>> getGeneralFeed(
         @RequestParam("region") String region,
-        @RequestParam(value = "authorId", required = false) Long authorId,
+        @RequestParam(value = "authorId", required = false) UUID authorId,
         @RequestParam(value = "page", defaultValue = "0") int page,
         @RequestParam(value = "size", defaultValue = "20") int size 
     ) {

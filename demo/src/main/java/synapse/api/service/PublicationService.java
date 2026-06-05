@@ -42,18 +42,18 @@ public class PublicationService {
         return repository.save(publication);
     }
 
-    public Page<Publication> getFilteredPublications(String regionTag, Long authorId, int page, int size){
+    public Page<Publication> getFilteredPublications(String regionTag, UUID authorId, int page, int size){
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         return repository.findPublicationByFilters(regionTag, authorId, pageable);
     }
 
-    public Publication findById(Long id){
+    public Publication findById(UUID id){
         return repository.findByIdWithAuthor(id)
             .orElseThrow(() -> new RuntimeException("Publicacion no encontrada"));
     }
     
     @Transactional
-    public void handleLike(Long publicationId, boolean isLike) {
+    public void handleLike(UUID publicationId, boolean isLike) {
         Publication publication = findById(publicationId);
         if (isLike) {
             publication.incrementLikes();

@@ -1,5 +1,7 @@
 package synapse.api.service;
 
+import java.util.UUID;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -40,7 +42,7 @@ public class UserService {
         return UserDTO.fromEntityMinimal(savedUser);
     }
 
-    public UserProfileDTO getUserInfo(Long idUser){
+    public UserProfileDTO getUserInfo(UUID idUser){
         UserProfileDTO uProfile = new UserProfileDTO();
         User u = userRepository.findById(idUser).orElse(null);
         if (u == null) return null;
@@ -55,7 +57,7 @@ public class UserService {
     }
 
     @Transactional
-    public User editProfile(Long id, String username, String profilePicture, String currentLocation){
+    public User editProfile(UUID id, String username, String profilePicture, String currentLocation){
         User u = userRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));        
         if (username != null && !username.isBlank()) u.setUsername(username);
