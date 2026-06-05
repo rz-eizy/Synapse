@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../widgets/professional_card.dart';
+import '../../../core/services/publicationService.dart';
+import '../../../core/models/publicationModel.dart';
 import '../../widgets/community_card.dart';
 
 class _TourStep {
@@ -35,6 +37,38 @@ class _HomeViewState extends State<HomeView> {
   final _keyTabs = GlobalKey();
   final _keyFirstCard = GlobalKey();
   final _keyBottomNav = GlobalKey();
+
+  final PublicationApiService _apiService = PublicationApiService();
+  
+  Future<List<PublicationModel>>? _publicationsFuture;
+  String _currentTab = 'PROFESSIONALS';
+  String _userToken = '';
+  
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // 3. Extrae el token enviado desde el Login de forma segura al inicializar el contexto
+    if (_userToken.isEmpty) {
+      final args = ModalRoute.of(context)?.settings.arguments;
+      if (args != null && args is String) {
+        _userToken = args;
+        _loadPublications();
+      }
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPublications();
+  }
+
+  void _loadPublications() {
+    if (_userToken.isEmpty) return;
+    setState(() {
+      _publicationsFuture = _apiService.fetchPublications(_userToken, _currentTab);
+    });
+  }
 
   // Construye los pasos una vez que el layout ya existe -------------------
   List<_TourStep> _buildSteps() {
@@ -134,13 +168,13 @@ class _HomeViewState extends State<HomeView> {
               ),
             ),
             centerTitle: false,
-            actions: [
+             actions: const [
               Padding(
-                padding: const EdgeInsets.only(right: 16),
+                padding: EdgeInsets.only(right: 16),
                 child: CircleAvatar(
                   radius: 18,
                   backgroundColor: AppColors.primaryLight,
-                  backgroundImage: const NetworkImage(''),
+                  backgroundImage: NetworkImage('https://via.placeholder.com/150'),
                 ),
               ),
             ],
@@ -150,13 +184,66 @@ class _HomeViewState extends State<HomeView> {
               _TabSelector(
                 key: _keyTabs,
                 selectedTab: _selectedTab,
-                onTabChanged: (i) => setState(() => _selectedTab = i),
+                onTabChanged: (index) {
+                  setState(() {
+                    _selectedTab = index;
+                    _currentTab = (index == 0) ? 'PROFESSIONALS' : 'COMMUNITY';
+                  });
+                  _loadPublications();
+                },
               ),
               const SizedBox(height: 8),
+
               Expanded(
-                child: _selectedTab == 0
-                    ? _ProfessionalesList(firstCardKey: _keyFirstCard)
-                    : _ComunidadList(firstCardKey: _keyFirstCard),
+                child: FutureBuilder<List<PublicationModel>>(
+                  future: _publicationsFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    } else if (snapshot.hasError) {
+                      return Center(child: Text('Error: ${snapshot.error}'));
+                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return const Center(
+                        child: Text('No hay publicaciones disponibles en esta sección.'),
+                      );
+                    }
+
+                    final publicaciones = snapshot.data!;
+                    
+                    return ListView.builder(
+                      padding: const EdgeInsets.only(top: 4, bottom: 16),
+                      itemCount: publicaciones.length,
+                      itemBuilder: (context, index) {
+                        final pub = publicaciones[index];
+                        final isFirst = index == 0;
+
+                        if (_selectedTab == 0) {
+                          return ProfessionalCard(
+                            key: isFirst ? _keyFirstCard : null,
+                            name: pub.authorName,
+                            handle: '@${pub.authorRole.toLowerCase()}',
+                            profession: pub.authorRole == 'PROFESSIONAL' ? 'Especialista Acreditado' : 'Usuario',
+                            imageUrl: pub.imageUrl ?? '',
+                            date: '${pub.createdAt.day}/${pub.createdAt.month}/${pub.createdAt.year}',
+                            description: pub.content,
+                            hashtags: const ['#Acreditado', '#Salud'],
+                          );
+                        } else {
+                          return CommunityCard(
+                            key: isFirst ? _keyFirstCard : null,
+                            userName: pub.authorName,
+                            userImageUrl: '',
+                            date: '${pub.createdAt.day}/${pub.createdAt.month}/${pub.createdAt.year}',
+                            content: pub.content,
+                            hashtags: const ['#Comunidad', '#Apoyo'],
+                            commentCount: 0,
+                            likeCount: pub.likesCount,
+                          );
+                        }
+                      },
+                    );
+                  },
+                ),
               ),
             ],
           ),
@@ -474,96 +561,6 @@ class _Tab extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _ProfessionalesList extends StatelessWidget {
-  final GlobalKey? firstCardKey;
-  const _ProfessionalesList({this.firstCardKey});
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.only(top: 4, bottom: 16),
-      children: [
-        ProfessionalCard(
-          key: firstCardKey,
-          name: 'Nathalie Espinoza',
-          handle: '@Psicóloga',
-          profession: 'Psicóloga Clínica',
-          imageUrl: '',
-          date: '01/05/26',
-          description:
-              'Soy Psicóloga Clínica, titulada de la Pontificia Universidad Católica de Chile, especializada en la atención de pacientes adultos.',
-          hashtags: const ['#Psicoanálisis', '#Videollamada', '#Presencial'],
-        ),
-        const ProfessionalCard(
-          name: 'Juan José Roca',
-          handle: '@Psiquiatra',
-          profession: 'Psiquiatra',
-          imageUrl: '',
-          date: '29/04/26',
-          description:
-              'Soy psiquiatra de la Universidad de Chile y mi enfoque está centrado en el tratamiento de trastornos del ánimo y ansiedad.',
-          hashtags: ['#Psiquiatría', '#Presencial'],
-        ),
-      ],
-    );
-  }
-}
-
-class _ComunidadList extends StatelessWidget {
-  final GlobalKey? firstCardKey;
-  const _ComunidadList({this.firstCardKey});
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.only(top: 4, bottom: 16),
-      children: [
-        CommunityCard(
-          key: firstCardKey,
-          userName: 'Eloy Prado',
-          userImageUrl: '',
-          date: '29/04/26',
-          content:
-              '¡Feliz fin de semana! 😄 Que Diosito los bendiga hoy y siempre. Un abracito virtual 🤗',
-          hashtags: const ['#Appoyo', '#BuenosDías', '#Amor'],
-          commentCount: 3,
-          likeCount: 0,
-        ),
-        const CommunityCard(
-          userName: 'Tomás Suárez',
-          userImageUrl: '',
-          date: '27/04/26',
-          content:
-              'Alguien sabe como hacer arroz con pollo? esque se me quemo el que estaba cocinando',
-          hashtags: ['#Comunidad'],
-          commentCount: 1,
-          likeCount: 0,
-        ),
-        const CommunityCard(
-          userName: 'Camila Echeverria',
-          userImageUrl: '',
-          date: '01/05/26',
-          content:
-              'hola, mi nombre es Cami y me presento tanto a mi como a mi niño Daniel. Buen día.',
-          hashtags: ['#Appoyo', '#BuenosDías', '#Amor'],
-          commentCount: 0,
-          likeCount: 0,
-        ),
-        const CommunityCard(
-          userName: 'Mariane Sanchez',
-          userImageUrl: '',
-          date: '30/04/26',
-          content:
-              'Busco ayuda para resolver unas dudas, alguien que pueda orientarme?',
-          hashtags: ['#Comunidad'],
-          commentCount: 0,
-          likeCount: 0,
-        ),
-      ],
     );
   }
 }
