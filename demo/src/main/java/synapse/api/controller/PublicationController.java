@@ -3,6 +3,7 @@ package synapse.api.controller;
 import java.util.Map;
 import java.util.UUID;
 
+import org.springframework.boot.security.autoconfigure.SecurityProperties;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -19,8 +20,10 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.validation.Valid;
 import synapse.api.dto.PublicationDTO;
 import synapse.api.model.Publication;
+import synapse.api.model.User;
 import synapse.api.security.CustomUserDetails;
 import synapse.api.service.PublicationService;
+import synapse.api.service.UserService;
 import synapse.api.service.external.CloudflareR2Service;
 
 @RestController
@@ -28,13 +31,16 @@ import synapse.api.service.external.CloudflareR2Service;
 public class PublicationController {
     private final PublicationService publicationService;
     private final CloudflareR2Service cloudflareService;
+    private final UserService userService;
 
     public PublicationController(
         PublicationService publicationService, 
-        CloudflareR2Service cloudflareService
+        CloudflareR2Service cloudflareService,
+        UserService userService
     ) {
         this.publicationService = publicationService;
         this.cloudflareService = cloudflareService;
+        this.userService = userService;
     }
     
     @GetMapping("/upload-url")
@@ -83,12 +89,20 @@ public class PublicationController {
     */
     @GetMapping("/feed")
     public ResponseEntity<Page<Publication>> getGeneralFeed(
-        @RequestParam("region") String region,
+        @AuthenticationPrincipal CustomUserDetails principal,
         @RequestParam(value = "authorId", required = false) UUID authorId,
         @RequestParam(value = "page", defaultValue = "0") int page,
         @RequestParam(value = "size", defaultValue = "20") int size 
     ) {
-        if (region == null || region.isBlank()) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        User user = userService.findById(principal.getId())
+            .orElseThrow(() -> new RuntimeException("Authenticated user profile not found"));
+            
+        String region = user.getRegion();
+        
+        if (region == null || region.isBlank()) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+        
         Page<Publication> feed = publicationService.getFilteredPublications(region, authorId, page, size);
         return ResponseEntity.ok(feed); 
     }

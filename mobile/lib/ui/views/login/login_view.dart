@@ -3,6 +3,7 @@ import '../../../core/constants.dart';
 import '../../../core/theme/app_colors.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -18,6 +19,8 @@ class _LoginViewState extends State<LoginView> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+  final _storage = const FlutterSecureStorage();
+
   Future<void> _login() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text;
@@ -29,7 +32,7 @@ class _LoginViewState extends State<LoginView> {
     }
     setState(() => _isLoading = true);
 
-    final url = Uri.parse('${ApiConfig.baseUrl}/api/auth/login');
+    final url = Uri.parse('${ApiConfig.baseUrl}/auth/login');
 
     try {
       final response = await http.post(
@@ -46,8 +49,15 @@ class _LoginViewState extends State<LoginView> {
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = jsonDecode(response.body);
         final String token = responseData['token'] ?? '';
-        if (mounted) {
-          Navigator.pushReplacementNamed(context, '/home');
+        if (token.isNotEmpty) {
+          // 2. GUARDAR EL TOKEN EN EL DISPOSITIVO
+          await _storage.write(key: 'jwt_token', value: token);
+          
+          if (mounted) {
+            Navigator.pushReplacementNamed(context, '/home');
+          }
+        } else {
+          String errorMessage = 'El servidor no esta funcionando en este momento';
         }
       } else {
         String errorMessage = 'Error al iniciar sesión (${response.statusCode})';

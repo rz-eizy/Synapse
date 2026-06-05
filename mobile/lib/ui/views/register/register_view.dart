@@ -40,7 +40,7 @@ class _RegisterViewState extends State<RegisterView> {
       return;
     }
     setState(() => _isLoading = true);
-    final url = Uri.parse('${ApiConfig.baseUrl}/api/auth/register');
+    final url = Uri.parse('${ApiConfig.baseUrl}/auth/register');
     String errorMessage = 'Error al registrarse';
 
     try {

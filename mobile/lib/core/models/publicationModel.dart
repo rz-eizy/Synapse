@@ -1,5 +1,5 @@
 class PublicationModel {
-  final int? id;
+  final String? id;
   final String authorName;
   final String authorRole;
   final String content;
@@ -20,14 +20,15 @@ class PublicationModel {
   });
 
   factory PublicationModel.fromJson(Map<String, dynamic> json) {
+    final authorJson = json['author'] as Map<String, dynamic>?;
     return PublicationModel(
-      id: json['id'],
-      authorName: json['authorName'] ?? 'Usuario',
-      authorRole: json['authorRole'] ?? 'REGULAR',
+      id: json['id']?.toString(),
+      authorName: authorJson?['username'] ?? json['authorName'] ?? 'Usuario Anónimo',
+      authorRole: authorJson?['role'] ?? json['authorRole'] ?? 'REGULAR',
       content: json['content'] ?? '',
       imageUrl: json['imageUrl'],
-      likesCount: json['likesCount'] ?? 0,
-      region: json['region'] ?? '',
+      likesCount: json['likes'] ?? 0,
+      region: json['regionTag'] ?? json['region'] ?? '',
       createdAt: json['createdAt'] != null 
           ? DateTime.parse(json['createdAt']) 
           : DateTime.now(),

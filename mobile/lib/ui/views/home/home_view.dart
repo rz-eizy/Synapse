@@ -3,6 +3,9 @@ import '../../../core/theme/app_colors.dart';
 import '../../widgets/professional_card.dart';
 import '../account/account_view.dart';
 import '../../widgets/community_card.dart';
+import '../../../core/services/publicationService.dart';
+import '../../../core/models/publicationModel.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class _TourStep {
   final String title;
@@ -170,43 +173,44 @@ class _HomeViewState extends State<HomeView> {
                           duration: const Duration(milliseconds: 180),
                           child: GestureDetector(
                             onTap: canPublish
-                                ? () {
-                                    final rawTags =
-                                        hashtagController.text.trim();
-                                    final tags = rawTags.isEmpty
-                                        ? <String>[]
-                                        : rawTags
-                                            .split(RegExp(r'\s+'))
-                                            .where((t) => t.isNotEmpty)
-                                            .map((t) => t.startsWith('#')
-                                                ? t
-                                                : '#$t')
-                                            .toList();
+                                ? () async {
+                                    final textContent = contentController.text.trim();
+                                    const storage = FlutterSecureStorage();
+                                    String? jwtToken = await storage.read(key: 'jwt_token');
+                                    String region = "Araucania";
 
-                                    final now = DateTime.now();
-                                    final date =
-                                        '${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year.toString().substring(2)}';
+                                    if (jwtToken == null || jwtToken.isEmpty) {
+                                      if (!sheetContext.mounted) return;
+                                        ScaffoldMessenger.of(sheetContext).showSnackBar(
+                                        const SnackBar(content: Text('Error de autenticación. Inicie sesión otra vez.')),
+                                      );
+                                      return;
+                                    }
 
-                                    final newPost = _CommunityPost(
-                                      userName: 'Tú',
-                                      userImageUrl: '',
-                                      date: date,
-                                      content: contentController.text.trim(),
-                                      hashtags: tags,
+                                    final apiService = PublicationApiService();
+                                    bool success = await apiService.createPublication(
+                                      jwtToken,
+                                      textContent,
+                                      null,
+                                      region
                                     );
 
-                                    Navigator.pop(sheetContext);
-                                    setState(() {
-                                      _selectedTab = 1;
-                                      _selectedNav = 0;
-                                    });
-                                    WidgetsBinding.instance
-                                        .addPostFrameCallback((_) {
-                                      _comunidadListKey.currentState
-                                          ?.addPost(newPost);
-                                    });
-                                  }
-                                : null,
+                                    if(success) {
+                                      if (!sheetContext.mounted) return;
+                                      Navigator.pop(sheetContext);
+                                      setState(() {
+                                        _selectedTab = 1;
+                                        _selectedNav = 0;
+                                      });
+                                      _comunidadListKey.currentState?._refreshPublications();
+                                    } else {
+                                      if (!sheetContext.mounted) return;
+                                      ScaffoldMessenger.of(sheetContext).showSnackBar(
+                                        const SnackBar(content: Text('Error del servidor: No se pudo publicar.')),
+                                      );
+                                    }
+                                }
+                              : null,
                             child: Container(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 20, vertical: 8),
@@ -815,61 +819,75 @@ class _ComunidadList extends StatefulWidget {
 }
 
 class _ComunidadListState extends State<_ComunidadList> {
-  final List<_CommunityPost> _posts = [
-    const _CommunityPost(
-      userName: 'Eloy Prado',
-      userImageUrl: '',
-      date: '29/04/26',
-      content: '¡Feliz fin de semana! 😄 Que Diosito los bendiga hoy y siempre. Un abracito virtual 🤗',
-      hashtags: ['#Appoyo', '#BuenosDías', '#Amor'],
-    ),
-    const _CommunityPost(
-      userName: 'Tomás Suárez',
-      userImageUrl: '',
-      date: '27/04/26',
-      content: 'Alguien sabe como hacer arroz con pollo? esque se me quemo el que estaba cocinando',
-      hashtags: ['#Comunidad'],
-    ),
-    const _CommunityPost(
-      userName: 'Camila Echeverria',
-      userImageUrl: '',
-      date: '01/05/26',
-      content: 'hola, mi nombre es Cami y me presento tanto a mi como a mi niño Daniel. Buen día.',
-      hashtags: ['#Appoyo', '#BuenosDías', '#Amor'],
-    ),
-    const _CommunityPost(
-      userName: 'Mariane Sanchez',
-      userImageUrl: '',
-      date: '30/04/26',
-      content: 'Busco ayuda para resolver unas dudas, alguien que pueda orientarme?',
-      hashtags: ['#Comunidad'],
-    ),
-  ];
+  final PublicationApiService _apiService = PublicationApiService();
+  final _storage = const FlutterSecureStorage();
 
-  // Agrega un nuevo post al inicio de la lista ----------------
-  void addPost(_CommunityPost post) {
-    setState(() => _posts.insert(0, post));
+  late Future<List<PublicationModel>> _futurePublications;
+
+  final String _region = "Araucania";
+  @override
+  void initState() {
+    super.initState();
+    _refreshPublications();
+  }
+
+  void _refreshPublications() {
+    setState(() {
+      _futurePublications = _loadPublicationsWithToken();
+    });
+  }
+
+  Future<List<PublicationModel>> _loadPublicationsWithToken() async {
+    final token = await _storage.read(key: 'jwt_token') ?? '';
+
+    if (token.isEmpty) {
+      throw Exception('Sesión expirada o no autenticado. Inicie sesión nuevamente.');
+    }
+    return _apiService.fetchPublications(token, _region);
   }
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      padding: const EdgeInsets.only(top: 4, bottom: 16),
-      itemCount: _posts.length,
-      itemBuilder: (context, i) {
-        final p = _posts[i];
-        return CommunityCard(
-          key: i == 0 ? widget.firstCardKey : null,
-          userName: p.userName,
-          userImageUrl: p.userImageUrl,
-          date: p.date,
-          content: p.content,
-          hashtags: p.hashtags,
+    return FutureBuilder<List<PublicationModel>>(
+      future: _futurePublications,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(
+            child: Text(
+              'Error al conectar: ${snapshot.error}',
+              style: const TextStyle(color: Colors.red),
+            ),
+          );
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(child: Text('No hay publicaciones en esta región.'));
+        }
+
+        final posts = snapshot.data!;
+
+        return ListView.builder(
+          padding: const EdgeInsets.only(top: 4, bottom: 16),
+          itemCount: posts.length,
+          itemBuilder: (context, i) {
+            final p = posts[i];
+            return CommunityCard(
+              key: i == 0 ? widget.firstCardKey : null,
+              userName: p.authorName,
+              userImageUrl: p.imageUrl ?? '',
+              date: '${p.createdAt.day}/${p.createdAt.month}/${p.createdAt.year}',
+              content: p.content,
+              hashtags: const [],
+            );
+          },
         );
       },
     );
   }
 }
+
+
+
 
 class _BottomNav extends StatelessWidget {
   final int selectedIndex;

@@ -75,4 +75,7 @@ public class UserService {
             throw new UsernameAlreadyExistsException();
         }
     }
+    public java.util.Optional<User> findById(UUID id) {
+        return userRepository.findById(id);
+    }
 }
