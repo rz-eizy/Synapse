@@ -1,13 +1,19 @@
 package synapse.api.model;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -34,13 +40,27 @@ public class User {
     @JsonIgnore
     private String password;
 
+    @Column(name = "role")
     private String role;
 
+    @Column(name = "profile_picture_url")
     private String profilePictureUrl;
     
+    @Column(name = "region")
     private String region;
 
+    @Column(name = "is_blocked")
     private Boolean isBlocked = false;
 
+    @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "user_favorites",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "favorite_user_id")
+    )
+    @JsonIgnore
+    private List<User> favorites = new ArrayList<>();
 }
