@@ -14,7 +14,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PutMapping;
+
 
 @RestController
 @RequestMapping("/api/user")
@@ -47,5 +50,15 @@ public class UserController {
         return new ResponseEntity<>(u, HttpStatus.OK);
     }
     
+    @PutMapping("/favorites/{targetUserId}")
+    public ResponseEntity<User> postAddFavorite(
+        @AuthenticationPrincipal CustomUserDetails principal,
+        @PathVariable Long targetUserId
+    ) {
+        Long userId = principal.getId();
+        service.toggleFavorite(userId, targetUserId);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
     
+        
 }

@@ -9,7 +9,9 @@ import org.springframework.transaction.annotation.Transactional;
 import synapse.api.dto.RegisterRequestDTO;
 import synapse.api.dto.UserDTO;
 import synapse.api.dto.UserProfileDTO;
+import synapse.api.exeption.CannotAddYourselfToFavorites;
 import synapse.api.exeption.EmailAlreadyExistsException;
+import synapse.api.exeption.UserNotFound;
 import synapse.api.exeption.UsernameAlreadyExistsException;
 import synapse.api.model.User;
 import synapse.api.repository.PublicationRepository;
@@ -57,12 +59,27 @@ public class UserService {
     @Transactional
     public User editProfile(Long id, String username, String profilePicture, String currentLocation){
         User u = userRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));        
+            .orElseThrow(UserNotFound::new);        
         if (username != null && !username.isBlank()) u.setUsername(username);
         if (profilePicture != null && !profilePicture.isBlank()) u.setProfilePictureUrl(profilePicture);
         if (currentLocation != null && !currentLocation.isBlank()) u.setRegion(currentLocation);
     
         return u; 
+    }
+
+    @Transactional
+    public void toggleFavorite(Long userId, Long targetUserId){
+        if (userId.equals(targetUserId)) throw new CannotAddYourselfToFavorites();
+        User currentUser = userRepository.findById(userId)
+                .orElseThrow(UserNotFound::new);
+        User targetUser = userRepository.findById(targetUserId)
+                .orElseThrow(UserNotFound::new);
+        // Si ya es favorito al hacer clic nuevamente este se elimina de la lista
+        if (currentUser.getFavorites().contains(targetUser)) {
+            currentUser.getFavorites().remove(targetUser);
+        } else{
+            currentUser.getFavorites().add(targetUser);
+        }
     }
 
     private void validateUserDoNotExists(String username, String email){
