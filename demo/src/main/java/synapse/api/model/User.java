@@ -3,6 +3,7 @@ package synapse.api.model;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -27,8 +28,9 @@ import lombok.Setter;
 @AllArgsConstructor
 public class User {
     @Id
-    @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY) 
-    private Long id;
+    @GeneratedValue(strategy = jakarta.persistence.GenerationType.UUID) 
+    @Column(name = "user_id", updatable = false, nullable = false)
+    private UUID id;
 
     @Column(name = "full_name",length = 50)
     private String username;
@@ -40,8 +42,8 @@ public class User {
     @JsonIgnore
     private String password;
 
-    @Column(name = "role")
-    private String role;
+    @Column(name = "role", nullable = false, columnDefinition = "user_role default 'regular'")
+    private String role = "regular";
 
     @Column(name = "profile_picture_url")
     private String profilePictureUrl;

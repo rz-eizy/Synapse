@@ -1,10 +1,13 @@
 package synapse.api.security;
 
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-import synapse.api.model.User;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.UUID;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import synapse.api.model.User;
 
 public class CustomUserDetails implements UserDetails {
 
@@ -30,7 +33,7 @@ public class CustomUserDetails implements UserDetails {
         // Se usa el email como nombre de usuario para autenticacion
         return user.getEmail();
     }
-    public Long getId(){
+    public UUID getId(){
         return user.getId();
     }
 

@@ -48,6 +48,7 @@ CREATE TABLE IF NOT EXISTS posts (
     content TEXT NOT NULL, -- RF-04 [cite: 9]
     image_url TEXT, -- RF-05 [cite: 10]
     region_tag VARCHAR(100), -- RF-12 [cite: 17]
+    is_approved BOOLEAN DEFAULT TRUE NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
