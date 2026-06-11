@@ -42,7 +42,18 @@ class _ProfessionalCardState extends State<ProfessionalCard> {
       backgroundColor: Colors.transparent,
       builder: (_) => CommentsSheet(
         initialComments: _comments,
-        onCommentAdded: (c) => setState(() => _comments.add(c)),
+        onCommentAdded: (String textContent) async{
+          final newComment = AppComment(
+            author: 'Tú',
+            text: textContent,
+            time: 'ahora',
+          );
+          
+          setState(() {
+            _comments.add(newComment);
+          });
+          return true;
+        },
       ),
     );
   }

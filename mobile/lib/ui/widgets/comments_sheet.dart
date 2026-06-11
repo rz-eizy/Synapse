@@ -15,7 +15,8 @@ class AppComment {
 
 class CommentsSheet extends StatefulWidget {
   final List<AppComment> initialComments;
-  final ValueChanged<AppComment> onCommentAdded;
+
+  final Future<bool> Function(String content) onCommentAdded; 
  
   const CommentsSheet({
     super.key,
@@ -32,13 +33,14 @@ class _CommentsSheetState extends State<CommentsSheet> {
   final _focusNode  = FocusNode();
   late List<AppComment> _comments;
   bool _canSend = false;
+  bool _isLoading = false;
  
   @override
   void initState() {
     super.initState();
     _comments = List.from(widget.initialComments);
     _controller.addListener(
-      () => setState(() => _canSend = _controller.text.trim().isNotEmpty),
+      () => setState(() => _canSend = _controller.text.trim().isNotEmpty && !_isLoading),
     );
   }
  
@@ -49,17 +51,32 @@ class _CommentsSheetState extends State<CommentsSheet> {
     super.dispose();
   }
  
-  void _submit() {
+  void _submit() async {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
-    final c = AppComment(author: 'Tú', text: text, time: 'ahora');
+
     setState(() {
-      _comments.add(c);
+      _isLoading = true;
       _canSend = false;
     });
-    widget.onCommentAdded(c);
-    _controller.clear();
-    _focusNode.unfocus(); 
+
+    bool success = await widget.onCommentAdded(text);
+
+    if (success){
+      final c = AppComment(author: 'Tú', text: text, time: 'ahora');
+      setState(() {
+        _comments.add(c);
+        _isLoading = false;
+      });
+      _controller.clear();
+      _focusNode.unfocus();
+    }else{
+      setState(() {
+        _isLoading = false;
+        _canSend = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error enviando el comentario. Intente de nuevo.')));
+    }
   }
  
   @override
@@ -145,6 +162,7 @@ class _CommentsSheetState extends State<CommentsSheet> {
                   child: TextField(
                     controller: _controller,
                     focusNode: _focusNode,
+                    enabled: !_isLoading,
                     textInputAction: TextInputAction.newline,
                     maxLines: 4,
                     minLines: 1,

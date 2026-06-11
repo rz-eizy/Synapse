@@ -32,6 +32,7 @@ import lombok.Setter;
 public class Publication {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "post_id")
     private UUID id;
 
     @Column(nullable = false, length = 1000)

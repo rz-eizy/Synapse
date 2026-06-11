@@ -113,23 +113,19 @@ class _CommunityCardState extends State<CommunityCard> {
       backgroundColor: Colors.transparent,
       builder: (sheetContext) => CommentsSheet(
         initialComments: uiComments,
-        onCommentAdded: (newUiComment) async {
+        onCommentAdded: (String textComent) async {
           bool isSaved = await _commentApiService.addComment(
             token,
             publicationId,
-            newUiComment.text,
+            textComent,
           );
 
           if (isSaved) {
             setState(() {
               _commentCountLocal++;
             });
-          } else {
-            if (!sheetContext.mounted) return;
-            ScaffoldMessenger.of(sheetContext).showSnackBar(
-              const SnackBar(content: Text('Error del servidor: No se pudo guardar el comentario.')),
-            );
           }
+          return isSaved;
         },
       ),
     );

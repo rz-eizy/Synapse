@@ -401,9 +401,14 @@ class _PostDetailSheetState extends State<_PostDetailSheet> {
       backgroundColor: Colors.transparent,
       builder: (_) => CommentsSheet(
         initialComments: _comments,
-        onCommentAdded: (c) {
-          setState(() => _comments.add(c)); 
-          widget.onCommentAdded();         
+        onCommentAdded: (String textContent) async {
+          final newComment = AppComment(
+            author: 'Tú', 
+            text: textContent, 
+            time: 'ahora'
+          );
+          setState(() {_comments.add(newComment); });
+          return true;
         },
       ),
     );

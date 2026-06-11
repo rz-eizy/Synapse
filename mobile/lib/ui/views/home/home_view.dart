@@ -6,6 +6,10 @@ import '../../widgets/community_card.dart';
 import '../../../core/services/publicationService.dart';
 import '../../../core/models/publicationModel.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter/material.dart';
+import '../../widgets/comments_sheet.dart';
+import 'package:mobile/core/services/commentService.dart';
+import 'package:mobile/core/models/commentModel.dart';
 
 class _TourStep {
   final String title;
@@ -177,7 +181,7 @@ class _HomeViewState extends State<HomeView> {
                                     final textContent = contentController.text.trim();
                                     const storage = FlutterSecureStorage();
                                     String? jwtToken = await storage.read(key: 'jwt_token');
-                                    String region = "Araucania";
+                                    String region = "Araucanía";
 
                                     if (jwtToken == null || jwtToken.isEmpty) {
                                       if (!sheetContext.mounted) return;
@@ -878,7 +882,7 @@ class _ComunidadListState extends State<_ComunidadList> {
               userImageUrl: p.imageUrl ?? '',
               date: '${p.createdAt.day}/${p.createdAt.month}/${p.createdAt.year}',
               content: p.content,
-              commentCount: 0,
+              commentCount: p.commentsCount,
               likeCount: p.likesCount,
               hashtags: const [],
             );

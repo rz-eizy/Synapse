@@ -29,6 +29,7 @@ import lombok.Setter;
 public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "comment_id")
     private UUID id;
 
     @Column(name = "content", length = 500, nullable = false)
