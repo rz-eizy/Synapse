@@ -9,6 +9,8 @@ import synapse.api.model.User;
 import synapse.api.security.CustomUserDetails;
 import synapse.api.service.UserService;
 
+import java.util.UUID;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -29,7 +31,8 @@ public class UserController {
     }
     @GetMapping("/me")
     public ResponseEntity<UserProfileDTO> getUserProfile(@AuthenticationPrincipal CustomUserDetails principal) {
-        UserProfileDTO u = service.getUserInfo(principal.getId());
+        UUID userId = principal.getId();
+        UserProfileDTO u = service.getUserInfo(userId);
         if (u == null) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         } else{
@@ -53,9 +56,9 @@ public class UserController {
     @PutMapping("/favorites/{targetUserId}")
     public ResponseEntity<User> postAddFavorite(
         @AuthenticationPrincipal CustomUserDetails principal,
-        @PathVariable Long targetUserId
+        @PathVariable UUID targetUserId
     ) {
-        Long userId = principal.getId();
+        UUID userId = principal.getId();
         service.toggleFavorite(userId, targetUserId);
         return new ResponseEntity<>(HttpStatus.OK);
     }

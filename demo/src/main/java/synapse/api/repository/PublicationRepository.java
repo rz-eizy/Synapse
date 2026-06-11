@@ -22,7 +22,7 @@ public interface PublicationRepository extends JpaRepository<Publication, UUID>{
            "AND (:authorId IS NULL OR p.author.id = :authorId)")
     Page<Publication> findPublicationByFilters(
         @Param("regionTag") String regionTag,
-        @Param("authorId") Long authorId,
+        @Param("authorId") UUID authorId,
         Pageable pageable
     );
 }
