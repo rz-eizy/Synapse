@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import '../../widgets/comments_sheet.dart';
 import 'package:mobile/core/services/commentService.dart';
 import 'package:mobile/core/models/commentModel.dart';
+import 'professional_view.dart';
 
 class _TourStep {
   final String title;
@@ -443,6 +444,12 @@ class _HomeViewState extends State<HomeView> {
             onTap: (i) {
               if (i == 1) {
                 _openPublishSheet();
+              } else if (i == 2) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const ProfessionalsView()),
+                );
               } else {
                 setState(() => _selectedNav = i);
               }
