@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 
-// ── Modelo de datos para un profesional ─────────────────────────────────────
+// Modelo de datos para un profesional -----------------------------
 class _Professional {
   final String name;
   final String handle;
@@ -128,7 +128,7 @@ class _ProfessionalsViewState extends State<ProfessionalsView> {
       ),
       body: Column(
         children: [
-          // ── Selector de tabs "Para ti / Favoritos" ─────────────────────
+          // Selector de tabs "Para ti / Favoritos" -------------------
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
             child: Container(
@@ -154,7 +154,7 @@ class _ProfessionalsViewState extends State<ProfessionalsView> {
             ),
           ),
 
-          // ── Lista de profesionales ──────────────────────────────────────
+          // Lista de profesionales -----------------------
           Expanded(
             child: list.isEmpty
                 ? Center(
@@ -194,7 +194,7 @@ class _ProfessionalsViewState extends State<ProfessionalsView> {
   }
 }
 
-// ── Tab del selector ─────────────────────────────────────────────────────────
+// Tab del selector -----------------------------
 class _Tab extends StatelessWidget {
   final String label;
   final bool active;
@@ -228,7 +228,7 @@ class _Tab extends StatelessWidget {
   }
 }
 
-// ── Ítem de la lista de profesionales ─────────────────────────────────────────
+// Ítem de la lista de profesionales ----------------------------
 class _ProfessionalListItem extends StatelessWidget {
   final _Professional professional;
   final bool isFavorite;
@@ -333,7 +333,7 @@ class _ProfessionalListItem extends StatelessWidget {
             padding: const EdgeInsets.only(left: 60),
             child: Row(
               children: [
-                // Chip de modalidad
+                // Chip de modalidad ---------------
                 if (p.modalities.isNotEmpty)
                   Expanded(
                     child: Container(
@@ -358,7 +358,7 @@ class _ProfessionalListItem extends StatelessWidget {
                   ),
                 const SizedBox(width: 10),
 
-                // Botón Ver Perfil
+                // Botón Ver Perfil -------------
                 Expanded(
                   flex: 2,
                   child: SizedBox(
@@ -382,7 +382,7 @@ class _ProfessionalListItem extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
 
                 // Favorito
                 GestureDetector(
@@ -404,7 +404,7 @@ class _ProfessionalListItem extends StatelessWidget {
   }
 }
 
-// ── Sheet con el perfil detallado del profesional ──────────────────────────────
+// Sheet con el perfil detallado del profesional --------------
 class _ProfessionalProfileSheet extends StatefulWidget {
   final _Professional professional;
   final bool isFavorite;
@@ -564,7 +564,6 @@ class _ProfessionalProfileSheetState
                     fontSize: 16, fontWeight: FontWeight.w600),
               ),
               onPressed: () {
-                // TODO: flujo de agendamiento / contacto
               },
               child: const Text('Contactar / Agendar'),
             ),

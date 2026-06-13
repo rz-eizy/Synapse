@@ -11,7 +11,7 @@ class EditAccountView extends StatefulWidget {
 class _EditAccountViewState extends State<EditAccountView> {
   bool _isLoading = false;
 
-  // Controladores — pre-poblados con los datos actuales del usuario
+  // Controladores — Mockeados
   final _nameController        = TextEditingController(text: 'juan pedro pérez');
   final _handleController      = TextEditingController(text: '@jpperez1234');
   final _bioController         = TextEditingController(text:
@@ -42,7 +42,6 @@ class _EditAccountViewState extends State<EditAccountView> {
 
     setState(() => _isLoading = true);
 
-    // TODO: llamada real a la API
     await Future.delayed(const Duration(milliseconds: 900));
 
     if (mounted) {
@@ -63,10 +62,10 @@ class _EditAccountViewState extends State<EditAccountView> {
       backgroundColor: AppColors.background,
       body: Column(
         children: [
-          // ── Header curvo con avatar ─────────────────────────────────────
+          // Header curvo con avatar --------------
           _ProfileHeader(onEditPhoto: _pickPhoto),
 
-          // ── Formulario ─────────────────────────────────────────────────
+          // Formulario ----------------
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(24, 28, 24, 32),
@@ -88,7 +87,6 @@ class _EditAccountViewState extends State<EditAccountView> {
                   // Cambiar tipo de cuenta
                   GestureDetector(
                     onTap: () {
-                      // TODO: navegar a pantalla de cuenta profesional
                     },
                     child: const Text(
                       'Cambiar a cuenta de profesional',
@@ -103,7 +101,7 @@ class _EditAccountViewState extends State<EditAccountView> {
                   ),
                   const SizedBox(height: 32),
 
-                  // Botón Confirmar Cambios
+                  // Botón Confirmar Cambios ---------------
                   SizedBox(
                     width: double.infinity,
                     height: 52,
@@ -143,14 +141,13 @@ class _EditAccountViewState extends State<EditAccountView> {
   }
 
   void _pickPhoto() {
-    // TODO: image_picker para elegir foto de galería / cámara
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Selector de foto próximamente')),
     );
   }
 }
 
-// ── Header curvo con foto de perfil ────────────────────────────────────────────
+// Header curvo con foto de perfil -----------------------
 class _ProfileHeader extends StatelessWidget {
   final VoidCallback onEditPhoto;
   const _ProfileHeader({required this.onEditPhoto});
@@ -160,7 +157,7 @@ class _ProfileHeader extends StatelessWidget {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        // Fondo curvo morado
+        // Fondo curvo morado ----------------
         ClipPath(
           clipper: _CurveClipper(),
           child: Container(
@@ -170,7 +167,7 @@ class _ProfileHeader extends StatelessWidget {
           ),
         ),
 
-        // AppBar encima del fondo
+        // AppBar encima del fondo ----------------
         SafeArea(
           child: SizedBox(
             height: 56,
@@ -192,14 +189,14 @@ class _ProfileHeader extends StatelessWidget {
                     ),
                   ),
                 ),
-                // Espacio para equilibrar el back button
+                // Espacio para equilibrar el back button --------------
                 const SizedBox(width: 48),
               ],
             ),
           ),
         ),
 
-        // Avatar centrado, solapado sobre la curva
+        // Avatar centrado, solapado sobre la curva --------------
         Positioned(
           bottom: -44,
           left: 0,
@@ -260,14 +257,14 @@ class _ProfileHeader extends StatelessWidget {
           ),
         ),
 
-        // Altura extra para que el avatar no quede cortado
+        // Altura extra para que el avatar no quede cortado ---------------
         const SizedBox(height: 260),
       ],
     );
   }
 }
 
-// ── Clipper para la curva inferior del header ───────────────────────────────────
+// Clipper para la curva inferior del header ----------------
 class _CurveClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
@@ -286,7 +283,7 @@ class _CurveClipper extends CustomClipper<Path> {
   bool shouldReclip(_) => false;
 }
 
-// ── Campo de texto reutilizable con label flotante ─────────────────────────────
+// Campo de texto reutilizable con label flotante ----------------
 class _Field extends StatelessWidget {
   final String label;
   final TextEditingController controller;
