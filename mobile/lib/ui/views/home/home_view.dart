@@ -3,6 +3,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../widgets/professional_card.dart';
 import '../account/account_view.dart';
 import '../../widgets/community_card.dart';
+import 'professional_view.dart';
 
 class _TourStep {
   final String title;
@@ -435,6 +436,12 @@ class _HomeViewState extends State<HomeView> {
             onTap: (i) {
               if (i == 1) {
                 _openPublishSheet();
+              } else if (i == 2) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const ProfessionalsView()),
+                );
               } else {
                 setState(() => _selectedNav = i);
               }

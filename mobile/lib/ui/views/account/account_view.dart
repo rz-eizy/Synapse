@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../widgets/comments_sheet.dart';
+import 'editAccount_view.dart';
 
 class _PostPreview {
   final String? imageUrl;
@@ -206,7 +207,11 @@ class _ProfileHeader extends StatelessWidget {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                     ),
-                    onPressed: () {},
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const EditAccountView()),
+                    ),
                     child: const Text('Editar perfil'),
                   ),
                 ),
