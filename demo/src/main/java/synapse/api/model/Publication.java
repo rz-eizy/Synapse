@@ -50,6 +50,9 @@ public class Publication {
     @Column(name = "likes")
     private int likes;
 
+    @org.hibernate.annotations.Formula("(SELECT COUNT(c.comment_id) FROM comments c WHERE c.post_id = post_id)")
+    private Integer commentsCount;
+
     /*  
         Implementacion futura
         Cuando esto sea falso se debe enviar a un admin para monitoreo

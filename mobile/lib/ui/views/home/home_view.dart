@@ -835,7 +835,7 @@ class _ComunidadListState extends State<_ComunidadList> {
 
   late Future<List<PublicationModel>> _futurePublications;
 
-  final String _region = "Araucania";
+  final String _region = "Araucanía";
   @override
   void initState() {
     super.initState();
