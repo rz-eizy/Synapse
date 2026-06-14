@@ -15,6 +15,7 @@ class CommunityCard extends StatefulWidget {
   final List<String> hashtags;
   final int commentCount;
   final int likeCount;
+  final String? postImageUrl;
 
   const CommunityCard({
     super.key,
@@ -26,6 +27,7 @@ class CommunityCard extends StatefulWidget {
     this.hashtags = const [],
     this.commentCount = 0,
     this.likeCount = 0,
+    this.postImageUrl
   });
 
   @override
@@ -228,6 +230,20 @@ class _CommunityCardState extends State<CommunityCard> {
             style: const TextStyle(
                 fontSize: 14, color: AppColors.textPrimary, height: 1.5),
           ),
+
+          //Imagenes
+          if (widget.postImageUrl != null && widget.postImageUrl!.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.network(
+                widget.postImageUrl!,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => const SizedBox.shrink()
+              )
+            )
+          ],
 
           // Hashtags
           if (widget.hashtags.isNotEmpty) ...[

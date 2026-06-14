@@ -1,6 +1,7 @@
 package synapse.api.service.external;
 
 import java.time.Duration;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -26,7 +27,7 @@ public class CloudflareR2Service {
         this.s3Presigner = s3Presigner;
     }
 
-    public String generatePresignedUploadUrl(String contentType) {
+    public Map<String, String> generatePresignedUploadUrl(String contentType) {
         String fileName = UUID.randomUUID().toString() + ".jpg";
 
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
@@ -41,6 +42,9 @@ public class CloudflareR2Service {
                 .build();
 
         PresignedPutObjectRequest request = s3Presigner.presignPutObject(presignRequest);
-        return request.url().toString();
+        return java.util.Map.of(
+            "uploadUrl", request.url().toString(),
+            "publicUrl", publicUrl + "/" + fileName
+        );
     }
 }

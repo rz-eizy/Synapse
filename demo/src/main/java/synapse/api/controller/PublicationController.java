@@ -3,7 +3,6 @@ package synapse.api.controller;
 import java.util.Map;
 import java.util.UUID;
 
-import org.springframework.boot.security.autoconfigure.SecurityProperties;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -45,8 +44,7 @@ public class PublicationController {
     
     @GetMapping("/upload-url")
     public ResponseEntity<Map<String, String>> getUploadUrl(@RequestParam("contentType") String contentType) {
-        String presignedUrl = cloudflareService.generatePresignedUploadUrl(contentType);
-        return ResponseEntity.ok(Map.of("uploadUrl", presignedUrl));
+        return ResponseEntity.ok(cloudflareService.generatePresignedUploadUrl(contentType));
     }
     
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)

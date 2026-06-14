@@ -11,6 +11,8 @@ import '../../widgets/comments_sheet.dart';
 import 'package:mobile/core/services/commentService.dart';
 import 'package:mobile/core/models/commentModel.dart';
 import 'professional_view.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 class _TourStep {
   final String title;
@@ -111,9 +113,13 @@ class _HomeViewState extends State<HomeView> {
   void _openPublishSheet() {
     final contentController = TextEditingController();
     final hashtagController = TextEditingController();
+    final ImagePicker picker = ImagePicker();
+  
     bool canPublish = false;
+    bool isUploading = false;
     int charCount = 0;
     const int maxChars = 280;
+    File? selectedImage;
 
     showModalBottomSheet(
       context: context,
@@ -122,13 +128,24 @@ class _HomeViewState extends State<HomeView> {
       builder: (sheetContext) {
         return StatefulBuilder(
           builder: (ctx, setSheetState) {
-            contentController.addListener(() {
+            void updatePublishState() {
               setSheetState(() {
                 charCount = contentController.text.length;
-                canPublish = contentController.text.trim().isNotEmpty &&
-                    charCount <= maxChars;
+                canPublish = (contentController.text.trim().isNotEmpty || selectedImage != null) &&
+                    charCount <= maxChars &&
+                    !isUploading;
               });
-            });
+            }
+
+            contentController.addListener(updatePublishState);
+
+            Future<void> pickImage() async {
+              final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+              if (image != null) {
+                selectedImage = File(image.path);
+                updatePublishState();
+              }
+            }
 
             final bottomInset = MediaQuery.of(ctx).viewInsets.bottom;
             final remaining = maxChars - charCount;
@@ -179,6 +196,8 @@ class _HomeViewState extends State<HomeView> {
                           child: GestureDetector(
                             onTap: canPublish
                                 ? () async {
+                                    setSheetState(() => isUploading = true);
+                                    
                                     final textContent = contentController.text.trim();
                                     const storage = FlutterSecureStorage();
                                     String? jwtToken = await storage.read(key: 'jwt_token');
@@ -186,19 +205,30 @@ class _HomeViewState extends State<HomeView> {
 
                                     if (jwtToken == null || jwtToken.isEmpty) {
                                       if (!sheetContext.mounted) return;
-                                        ScaffoldMessenger.of(sheetContext).showSnackBar(
-                                        const SnackBar(content: Text('Error de autenticación. Inicie sesión otra vez.')),
-                                      );
+                                      ScaffoldMessenger.of(sheetContext).showSnackBar(const SnackBar(content: Text('Error de autenticación.')));
+                                      setSheetState(() => isUploading = false);
                                       return;
                                     }
 
                                     final apiService = PublicationApiService();
-                                    bool success = await apiService.createPublication(
-                                      jwtToken,
-                                      textContent,
-                                      null,
-                                      region
-                                    );
+                                    String? finalImageUrl;
+
+                                    if (selectedImage != null) {
+                                      final urls = await apiService.getUploadURLs(jwtToken, "image/jpeg");
+                                      if (urls != null) {
+                                        bool uploaded = await apiService.uploadImageToCloudFlare(urls['uploadUrl']!, selectedImage!, "image/jpeg");
+                                        if (uploaded) {
+                                          finalImageUrl = urls['publicUrl'];
+                                        } else {
+                                          if (!sheetContext.mounted) return;
+                                          ScaffoldMessenger.of(sheetContext).showSnackBar(const SnackBar(content: Text('Error al subir la imagen.')));
+                                          setSheetState(() => isUploading = false);
+                                          return;
+                                        }
+                                      }
+                                    }
+
+                                    bool success = await apiService.createPublication(jwtToken, textContent, finalImageUrl, region);
 
                                     if(success) {
                                       if (!sheetContext.mounted) return;
@@ -210,28 +240,17 @@ class _HomeViewState extends State<HomeView> {
                                       _comunidadListKey.currentState?._refreshPublications();
                                     } else {
                                       if (!sheetContext.mounted) return;
-                                      ScaffoldMessenger.of(sheetContext).showSnackBar(
-                                        const SnackBar(content: Text('Error del servidor: No se pudo publicar.')),
-                                      );
+                                      ScaffoldMessenger.of(sheetContext).showSnackBar(const SnackBar(content: Text('Error del servidor.')));
+                                      setSheetState(() => isUploading = false);
                                     }
                                 }
                               : null,
                             child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 20, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: AppColors.primary,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: const Text(
-                                'Publicar',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 0.2,
-                                ),
-                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                              decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(20)),
+                              child: isUploading
+                                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                                  : const Text('Publicar', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w700)),
                             ),
                           ),
                         ),
@@ -331,13 +350,46 @@ class _HomeViewState extends State<HomeView> {
                   ),
 
                   // barra inferior (contador de caràcteres) -----------------
+                  if (selectedImage != null)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 48, right: 16, bottom: 12),
+                      child: Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.file(selectedImage!, height: 120, width: double.infinity, fit: BoxFit.cover),
+                          ),
+                          Positioned(
+                            top: 8, right: 8,
+                            child: GestureDetector(
+                              onTap: () {
+                                selectedImage = null;
+                                updatePublishState();
+                              },
+                              child: const CircleAvatar(radius: 14, backgroundColor: Colors.black54, child: Icon(Icons.close, size: 16, color: Colors.white)),
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+
                   const Divider(height: 1, color: Color(0xFFEEE5F5)),
+                  
+                  // barra inferior (Botón de Galería + contador de carácteres)
                   Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 10),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
+                        if (_selectedTab == 0)
+                          IconButton(
+                            icon: const Icon(Icons.image_outlined, color: AppColors.primary),
+                            onPressed: pickImage,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints()
+                          )
+                        else
+                         const SizedBox(width: 24),
+                        const Spacer(),
                         Text(
                           '$remaining',
                           style: TextStyle(
@@ -886,7 +938,8 @@ class _ComunidadListState extends State<_ComunidadList> {
               key: i == 0 ? widget.firstCardKey : null,
               id: p.id,
               userName: p.authorName,
-              userImageUrl: p.imageUrl ?? '',
+              userImageUrl: '',
+              postImageUrl: p.imageUrl,
               date: '${p.createdAt.day}/${p.createdAt.month}/${p.createdAt.year}',
               content: p.content,
               commentCount: p.commentsCount,

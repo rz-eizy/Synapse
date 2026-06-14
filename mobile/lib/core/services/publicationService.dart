@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../constants.dart';
 import '../models/publicationModel.dart';
+import 'dart:io';
 
 class PublicationApiService {
   Future<List<PublicationModel>> fetchPublications(String jwtToken, String region, {int page = 0, int size = 20}) async {
@@ -77,6 +78,31 @@ class PublicationApiService {
       return response.statusCode == 200;
     } catch (e) {
       print('Exception en Like: $e');
+      return false;
+    }
+  }
+
+  Future<Map<String, String>?> getUploadURLs(String jwtToken, String contentType) async{
+    final url = Uri.parse('${ApiConfig.baseUrl}/publication/upload-url?contentType=$contentType');
+    try{
+      final response = await http.get(url, headers: {'Authorization': 'Bearer $jwtToken'});
+      if (response.statusCode == 200) {
+        return Map<String, String>.from(jsonDecode(response.body));
+      }
+      return null;
+    }catch(e){
+      print('Exception en getUploadUrls: $e');
+      return null;
+    }
+  }
+
+  Future<bool> uploadImageToCloudFlare(String presignedUrl, File imageFile, String contentType) async {
+    try {
+      final bytes = await imageFile.readAsBytes();
+      final response = await http.put(Uri.parse(presignedUrl), headers: {'Content-Type': contentType, 'Content-Length': bytes.length.toString()}, body: bytes);
+      return response.statusCode == 200;
+    }catch(e){
+      print('Exception al subir a Cloudflare: $e');
       return false;
     }
   }
