@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/services/userService.dart';
+import '../../../core/services/publicationService.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class EditAccountView extends StatefulWidget {
   const EditAccountView({super.key});
@@ -10,13 +15,36 @@ class EditAccountView extends StatefulWidget {
 
 class _EditAccountViewState extends State<EditAccountView> {
   bool _isLoading = false;
+  File? _selectedImage;
+  final ImagePicker _picker = ImagePicker();
+  
+  final _nameController        = TextEditingController();
+  final _handleController      = TextEditingController();
+  final _bioController         = TextEditingController();
+  final _emailController       = TextEditingController();
 
-  // Controladores — Mockeados
-  final _nameController        = TextEditingController(text: 'juan pedro pérez');
-  final _handleController      = TextEditingController(text: '@jpperez1234');
-  final _bioController         = TextEditingController(text:
-      'hola amigoss, soy Juan Pedro, pueden llamarme JP, soy padre de un precioso hijo de 7 añitos, llamado Mateo, diagnosticado con Trastorno del espectro autista. 💜');
-  final _emailController       = TextEditingController(text: 'jpperez@ejemplo.cl');
+  final _storage = const FlutterSecureStorage();
+  final _userApiService = UserApiService();
+  final _pubApiService = PublicationApiService();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInitialData();
+  }
+
+  Future<void> _loadInitialData() async {
+    final token = await _storage.read(key: 'jwt_token') ?? '';
+    if (token.isEmpty) return;
+
+    final profileData = await _userApiService.getMyProfile(token);
+    if (profileData != null && mounted) {
+      setState(() {
+        _nameController.text = profileData['username'] ?? '';
+        _handleController.text = profileData['username'] ?? ''; // bio y email se quedan vacíos por ahora porque el DTO no los soporta.
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -27,32 +55,69 @@ class _EditAccountViewState extends State<EditAccountView> {
     super.dispose();
   }
 
-  Future<void> _save() async {
-    final name   = _nameController.text.trim();
-    final handle = _handleController.text.trim();
-    final bio    = _bioController.text.trim();
-    final email  = _emailController.text.trim();
+  Future<void> _pickPhoto() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() {
+        _selectedImage = File(image.path);
+      });
+    }
+  }
 
-    if (name.isEmpty || email.isEmpty) {
+  Future<void> _save() async {
+    final handle = _handleController.text.trim();
+
+    if (handle.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('El nombre y el correo son obligatorios')),
+        const SnackBar(content: Text('El usuario es obligatorio')),
       );
       return;
     }
 
     setState(() => _isLoading = true);
+    final token = await _storage.read(key: 'jwt_token') ?? '';
+    if (token.isEmpty) {
+      setState(() => _isLoading = false);
+      return;
+    }
 
-    await Future.delayed(const Duration(milliseconds: 900));
+    String? finalImageUrl;
+    if (_selectedImage != null) {
+      final urls = await _pubApiService.getUploadURLs(token, "image/jpeg");
+      if (urls != null) {
+        bool uploaded = await _pubApiService.uploadImageToCloudFlare(
+            urls['uploadUrl']!, _selectedImage!, "image/jpeg");
+        if (uploaded) {
+          finalImageUrl = urls['publicUrl'];
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Error al subir la imagen a la nube')),
+          );
+          setState(() => _isLoading = false);
+          return;
+        }
+      }
+    }
+
+    bool success = await _userApiService.updateProfile(
+      token, 
+      handle, 
+      finalImageUrl, 
+      "Araucanía"
+    );
 
     if (mounted) {
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Perfil actualizado con éxito'),
-          backgroundColor: Colors.green,
-        ),
-      );
-      Navigator.pop(context);
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Perfil actualizado con éxito'), backgroundColor: Colors.green),
+        );
+        Navigator.pop(context, true);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Error al actualizar el perfil')),
+        );
+      }
     }
   }
 
@@ -63,7 +128,10 @@ class _EditAccountViewState extends State<EditAccountView> {
       body: Column(
         children: [
           // Header curvo con avatar --------------
-          _ProfileHeader(onEditPhoto: _pickPhoto),
+          _ProfileHeader(
+            onEditPhoto: () => _pickPhoto(),
+            selectedImage: _selectedImage,
+          ),
 
           // Formulario ----------------
           Expanded(
@@ -139,18 +207,13 @@ class _EditAccountViewState extends State<EditAccountView> {
       ),
     );
   }
-
-  void _pickPhoto() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Selector de foto próximamente')),
-    );
-  }
 }
 
 // Header curvo con foto de perfil -----------------------
 class _ProfileHeader extends StatelessWidget {
   final VoidCallback onEditPhoto;
-  const _ProfileHeader({required this.onEditPhoto});
+  final File? selectedImage;
+  const _ProfileHeader({required this.onEditPhoto, this.selectedImage});
 
   @override
   Widget build(BuildContext context) {
@@ -218,10 +281,11 @@ class _ProfileHeader extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: const CircleAvatar(
+                    child: CircleAvatar(
                       radius: 52,
                       backgroundColor: AppColors.primaryLight,
-                      child: Icon(Icons.person, size: 52, color: AppColors.primary),
+                      backgroundImage: selectedImage != null ? FileImage(selectedImage!) : null,
+                      child: selectedImage == null ? const Icon(Icons.person, size: 52, color: AppColors.primary) : null,
                     ),
                   ),
                   // Botón cámara
