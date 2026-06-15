@@ -2,6 +2,7 @@ class PublicationModel {
   final String? id;
   final String authorName;
   final String authorRole;
+  final String? authorImageUrl;
   final String content;
   final String? imageUrl;
   final int likesCount;
@@ -13,6 +14,7 @@ class PublicationModel {
     this.id,
     required this.authorName,
     required this.authorRole,
+    this.authorImageUrl,
     required this.content,
     this.imageUrl,
     this.likesCount = 0,
@@ -27,6 +29,7 @@ class PublicationModel {
       id: json['id']?.toString(),
       authorName: authorJson?['username'] ?? json['authorName'] ?? 'Usuario Anónimo',
       authorRole: authorJson?['role'] ?? json['authorRole'] ?? 'REGULAR',
+      authorImageUrl: authorJson?['profilePictureUrl'] ?? json['authorProfilePicture'] ?? '',
       content: json['content'] ?? '',
       imageUrl: json['imageUrl'],
       likesCount: json['likes'] ?? 0,

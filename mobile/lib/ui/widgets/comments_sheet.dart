@@ -5,11 +5,13 @@ class AppComment {
   final String author;
   final String text;
   final String time;
+  final String? imageUrl;
 
   const AppComment({
     required this.author,
     required this.text,
     required this.time,
+    this.imageUrl
   });
 }
 
@@ -292,32 +294,24 @@ class _CommentTileState extends State<_CommentTile>
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onDoubleTap: _doubleTapLike,
-      onLongPress: widget.onReport,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        child: Stack(
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Avatar
-                CircleAvatar(
-                  radius: 18,
-                  backgroundColor: AppColors.primaryLight,
-                  child: Text(
-                    widget.comment.author.isNotEmpty
-                        ? widget.comment.author[0].toUpperCase()
-                        : '?',
-                    style: const TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Stack(
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+          CircleAvatar(
+            radius: 18,
+            backgroundColor: AppColors.primaryLight,
+            backgroundImage: (widget.comment.imageUrl != null && widget.comment.imageUrl!.isNotEmpty)
+              ? NetworkImage(widget.comment.imageUrl!)
+              : null,
+            child: (widget.comment.imageUrl == null || widget.comment.imageUrl!.isEmpty)
+              ? const Icon(Icons.person, size: 18, color: AppColors.primary)
+              : null,
+          ),
+          const SizedBox(width: 10),
 
                 // Texto + timestamp -----------
                 Expanded(
@@ -417,8 +411,7 @@ class _CommentTileState extends State<_CommentTile>
               ),
           ],
         ),
-      ),
-    );
+      );
   }
 }
 

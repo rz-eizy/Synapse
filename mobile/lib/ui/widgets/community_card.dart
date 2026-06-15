@@ -105,6 +105,7 @@ class _CommunityCardState extends State<CommunityCard> {
         author: c.authorName,
         text: c.content,
         time: 'hace poco',
+        imageUrl: c.authorImageUrl,
       );
     }).toList();
 

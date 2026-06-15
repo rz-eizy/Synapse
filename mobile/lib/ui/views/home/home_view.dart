@@ -938,7 +938,7 @@ class _ComunidadListState extends State<_ComunidadList> {
               key: i == 0 ? widget.firstCardKey : null,
               id: p.id,
               userName: p.authorName,
-              userImageUrl: '',
+              userImageUrl: p.authorImageUrl ?? '',
               postImageUrl: p.imageUrl,
               date: '${p.createdAt.day}/${p.createdAt.month}/${p.createdAt.year}',
               content: p.content,
