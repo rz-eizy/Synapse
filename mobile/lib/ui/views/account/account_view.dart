@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../widgets/comments_sheet.dart';
 import 'editAccount_view.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../../../core/services/userService.dart';
 
 class _PostPreview {
   final String? imageUrl;
@@ -17,61 +19,54 @@ class _PostPreview {
   });
 }
 
-class AccountView extends StatelessWidget {
+class AccountView extends StatefulWidget {
   const AccountView({super.key});
 
-  static const List<_PostPreview> _posts = [
-    _PostPreview(
-      imageUrl: 'https://picsum.photos/seed/p1/300/300',
-      text: 'Una imagen del día, que preciosoooo',
-      likes: 12,
-      comments: 3,
-    ),
-    _PostPreview(
-      text: '¡Feliz fin de semana! Que Diosito los bendiga hoy y siempre. Un abracito virtual 🤗 #Appoyo #Amor',
-      likes: 45,
-      comments: 2,
-    ),
-    _PostPreview(
-      imageUrl: 'https://picsum.photos/seed/p3/300/300',
-      text: 'Reflexión del día, compartan!',
-      likes: 24,
-      comments: 5,
-    ),
-    _PostPreview(
-      text: 'Busco ayuda para resolver unas dudas, alguien que pueda orientarme? #Comunidad',
-      likes: 4,
-      comments: 7,
-    ),
-    _PostPreview(
-      imageUrl: 'https://picsum.photos/seed/p5/300/300',
-      text: 'Momentos especiales',
-      likes: 31,
-      comments: 9,
-    ),
-    _PostPreview(
-      text: 'Hola a todos, me presento. Soy nuevo en la comunidad y estoy muy contento de estar aquí 😊 #BuenosDías',
-      likes: 79,
-      comments: 4,
-    ),
-    _PostPreview(
-      imageUrl: 'https://picsum.photos/seed/p7/300/300',
-      text: 'Tarde de trabajo',
-      likes: 32,
-      comments: 1,
-    ),
-    _PostPreview(
-      text: 'Recordatorio: cuidar tu salud mental es tan importante como cuidar tu salud física 💜 #SaludMental',
-      likes: 45,
-      comments: 11,
-    ),
-    _PostPreview(
-      imageUrl: 'https://picsum.photos/seed/p9/300/300',
-      text: 'Naturaleza y paz',
-      likes: 17,
-      comments: 2,
-    ),
-  ];
+  @override
+  State<AccountView> createState() => _AccountViewState();
+}
+
+class _AccountViewState extends State<AccountView> {
+  final UserApiService _apiService = UserApiService();
+  final _storage = const FlutterSecureStorage();
+  
+  bool _isLoading = true;
+  String _username = '';
+  String _profileImageUrl = '';
+  List<_PostPreview> _userPosts = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserProfile();
+  }
+
+  Future<void> _loadUserProfile() async {
+    final token = await _storage.read(key: 'jwt_token') ?? '';
+    if (token.isEmpty) return;
+
+    final profileData = await _apiService.getMyProfile(token);
+    
+    if (profileData != null && mounted) {
+      final publicationsJson = profileData['publications'] as List<dynamic>? ?? [];
+      
+      setState(() {
+        _username = profileData['username'] ?? 'Usuario';
+        _profileImageUrl = profileData['profilePictureUrl'] ?? '';
+        
+        _userPosts = publicationsJson.map((pub) => _PostPreview(
+          text: pub['content'] ?? '',
+          imageUrl: pub['imageUrl'],
+          likes: pub['likes'] ?? 0,
+          comments: pub['commentsCount'] ?? 0,
+        )).toList();
+        
+        _isLoading = false;
+      });
+    } else {
+      setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -94,47 +89,65 @@ class AccountView extends StatelessWidget {
         ),
         centerTitle: true,
       ),
-      body: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(child: _ProfileHeader()),
-          const SliverToBoxAdapter(
-            child: Divider(height: 1, color: Color(0xFFEEE5F5)),
-          ),
-          const SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.grid_on, color: AppColors.primary, size: 22),
-                ],
+      body: _isLoading 
+        ? const Center(child: CircularProgressIndicator()) 
+        : CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: _ProfileHeader(
+                  username: _username,
+                  profileImageUrl: _profileImageUrl,
+                  postCount: _userPosts.length,
+                )
               ),
-            ),
-          ),
-          const SliverToBoxAdapter(
-            child: Divider(height: 1, color: Color(0xFFEEE5F5)),
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.all(2),
-            sliver: SliverGrid(
-              delegate: SliverChildBuilderDelegate(
-                (context, i) => _PostThumbnail(post: _posts[i]),
-                childCount: _posts.length,
+              const SliverToBoxAdapter(
+                child: Divider(height: 1, color: Color(0xFFEEE5F5)),
               ),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 2,
-                mainAxisSpacing: 2,
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.grid_on, color: AppColors.primary, size: 22),
+                    ],
+                  ),
+                ),
               ),
-            ),
+              const SliverToBoxAdapter(
+                child: Divider(height: 1, color: Color(0xFFEEE5F5)),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.all(2),
+                sliver: SliverGrid(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, i) => _PostThumbnail(post: _userPosts[i]),
+                    childCount: _userPosts.length,
+                  ),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 2,
+                    mainAxisSpacing: 2,
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 }
 
 class _ProfileHeader extends StatelessWidget {
+  final String username;
+  final String profileImageUrl;
+  final int postCount;
+
+  const _ProfileHeader({
+    required this.username,
+    required this.profileImageUrl,
+    required this.postCount,
+  });
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -149,27 +162,29 @@ class _ProfileHeader extends StatelessWidget {
                   shape: BoxShape.circle,
                   border: Border.all(color: AppColors.primaryMedium, width: 3),
                 ),
-                child: const CircleAvatar(
+                child: CircleAvatar(
                   radius: 52,
                   backgroundColor: AppColors.primaryLight,
-                  child: Icon(Icons.person, size: 52, color: AppColors.primary),
+                  backgroundImage: profileImageUrl.isNotEmpty ? NetworkImage(profileImageUrl) : null,
+                  child: profileImageUrl.isEmpty ? const Icon(Icons.person, size: 52, color: AppColors.primary) : null,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          const Text(
-            'juan pedro pérez',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+          Text(
+            username,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
           ),
           const SizedBox(height: 4),
-          const Text(
-            '@jpperez1234',
-            style: TextStyle(fontSize: 14, color: AppColors.primary),
+          Text(
+            '@${username.replaceAll(' ', '').toLowerCase()}',
+            style: const TextStyle(fontSize: 14, color: AppColors.primary),
           ),
           const SizedBox(height: 14),
+          // la bio esta hardcodeada por ahora, hay que modificar el endpoint para que la retorne
           const Text(
-            'hola amigoss, soy Juan Pedro, pueden llamarme JP, soy padre de un precioso hijo de 7 añitos, llamado Mateo, diagnosticado con Trastorno del espectro autista. 💜',
+            '¡Hola, bienvenido a mi perfil!',
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.5),
           ),
@@ -182,14 +197,14 @@ class _ProfileHeader extends StatelessWidget {
                   color: AppColors.primaryLight,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Column(
+                child: Column(
                   children: [
                     Text(
-                      '9',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                      '$postCount',
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                     ),
-                    SizedBox(height: 2),
-                    Text(
+                    const SizedBox(height: 2),
+                    const Text(
                       'Publicaciones',
                       style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
                     ),
