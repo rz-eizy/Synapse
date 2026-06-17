@@ -27,7 +27,7 @@ class CommunityCard extends StatefulWidget {
     this.hashtags = const [],
     this.commentCount = 0,
     this.likeCount = 0,
-    this.postImageUrl
+    this.postImageUrl,
   });
 
   @override
@@ -37,70 +37,63 @@ class CommunityCard extends StatefulWidget {
 class _CommunityCardState extends State<CommunityCard> {
   late int _likes;
   bool _liked = false;
-
   late int _commentCountLocal;
-  final _storage = const FlutterSecureStorage();
-  final _commentApiService = CommentApiService();
-  final _apiService = PublicationApiService();
+
+  final _storage            = const FlutterSecureStorage();
+  final _commentApiService  = CommentApiService();
+  final _apiService         = PublicationApiService();
 
   @override
   void initState() {
     super.initState();
-    _likes = widget.likeCount;
-    _commentCountLocal = widget.commentCount;
+    _likes              = widget.likeCount;
+    _commentCountLocal  = widget.commentCount;
   }
 
   Future<void> _toggleLike() async {
-    final bool nuevoEstadoLike = !_liked;
-
+    final bool next = !_liked;
     setState(() {
-      _liked = nuevoEstadoLike;
-      _likes += nuevoEstadoLike ? 1 : -1;
+      _liked  = next;
+      _likes += next ? 1 : -1;
     });
 
-    final String token = await _storage.read(key: 'jwt_token') ?? '';
+    final String token         = await _storage.read(key: 'jwt_token') ?? '';
     final String publicationId = widget.id ?? '';
-
     if (token.isEmpty || publicationId.isEmpty) return;
 
-    bool success =
-        await _apiService.toggleLike(token, publicationId, nuevoEstadoLike);
-
+    bool success = await _apiService.toggleLike(token, publicationId, next);
     if (!success) {
       setState(() {
-        _liked = !_liked;
+        _liked  = !_liked;
         _likes += _liked ? 1 : -1;
       });
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Error de red: No se pudo registrar el like.')),
+        const SnackBar(content: Text('Error de red: No se pudo registrar el like.')),
       );
     }
   }
 
   Future<void> _openComments() async {
-    final String token = await _storage.read(key: 'jwt_token') ?? '';
+    final String token         = await _storage.read(key: 'jwt_token') ?? '';
     final String publicationId = widget.id ?? '';
 
     if (token.isEmpty || publicationId.isEmpty) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Sesión inválida o error de publicación.')),
+        const SnackBar(content: Text('Sesión inválida o error de publicación.')),
       );
       return;
     }
 
     List<CommentModel> serverComments = [];
     try {
-      serverComments =
-          await _commentApiService.fetchComments(token, publicationId);
+      serverComments = await _commentApiService.fetchComments(token, publicationId);
     } catch (e) {
-      debugPrint("Error al descargar comentarios: $e");
+      debugPrint('Error al descargar comentarios: $e');
     }
 
-    List<AppComment> uiComments = serverComments.map((c) {
+    final List<AppComment> uiComments = serverComments.map((c) {
       return AppComment(
         author: c.authorName,
         text: c.content,
@@ -119,15 +112,10 @@ class _CommunityCardState extends State<CommunityCard> {
         initialComments: uiComments,
         onCommentAdded: (String textComent) async {
           bool isSaved = await _commentApiService.addComment(
-            token,
-            publicationId,
-            textComent,
+            token, publicationId, textComent,
           );
-
           if (isSaved) {
-            setState(() {
-              _commentCountLocal++;
-            });
+            setState(() => _commentCountLocal++);
           }
           return isSaved;
         },
@@ -148,169 +136,175 @@ class _CommunityCardState extends State<CommunityCard> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.divider, width: 1),
+        boxShadow: const [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.06),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            color: AppColors.shadowCard,
+            blurRadius: 16,
+            offset: Offset(0, 4),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              CircleAvatar(
-                radius: 24,
-                backgroundColor: AppColors.primaryLight,
-                backgroundImage: widget.userImageUrl.isNotEmpty
-                    ? NetworkImage(widget.userImageUrl)
-                    : null,
-                child: widget.userImageUrl.isEmpty
-                    ? Text(
-                        widget.userName.isNotEmpty ? widget.userName[0] : '?',
+          // ── Header ──────────────────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 8, 0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                _UserAvatar(
+                  name: widget.userName,
+                  imageUrl: widget.userImageUrl,
+                  radius: 22,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.userName,
                         style: const TextStyle(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.bold),
-                      )
-                    : null,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  widget.userName,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                    color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                          color: AppColors.textPrimary,
+                          letterSpacing: -0.1,
+                        ),
+                      ),
+                      const SizedBox(height: 1),
+                      Text(
+                        widget.date,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: AppColors.textMuted,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-              // Botón 3 puntos
-              SizedBox(
-                width: 32,
-                height: 32,
-                child: PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert,
-                      size: 20, color: AppColors.textMuted),
-                  padding: EdgeInsets.zero,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  onSelected: (value) {
-                    if (value == 'report') _openReportSheet();
-                  },
-                  itemBuilder: (_) => [
-                    const PopupMenuItem(
-                      value: 'report',
-                      child: Row(
-                        children: [
-                          Icon(Icons.flag_outlined,
-                              size: 18, color: Colors.redAccent),
-                          SizedBox(width: 8),
-                          Text('Reportar publicación'),
-                        ],
+                // Menú 3 puntos
+                SizedBox(
+                  width: 36,
+                  height: 36,
+                  child: PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_horiz,
+                        size: 20, color: AppColors.textMuted),
+                    padding: EdgeInsets.zero,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
+                    elevation: 2,
+                    onSelected: (value) {
+                      if (value == 'report') _openReportSheet();
+                    },
+                    itemBuilder: (_) => [
+                      PopupMenuItem(
+                        value: 'report',
+                        child: Row(
+                          children: const [
+                            Icon(Icons.flag_outlined,
+                                size: 16, color: AppColors.error),
+                            SizedBox(width: 10),
+                            Text(
+                              'Reportar publicación',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // ── Contenido ───────────────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: Text(
+              widget.content,
+              style: const TextStyle(
+                fontSize: 14,
+                color: AppColors.textPrimary,
+                height: 1.6,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
+
+          // ── Imagen ──────────────────────────────────────────────────────
+          if (widget.postImageUrl != null &&
+              widget.postImageUrl!.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(14),
+                child: Image.network(
+                  widget.postImageUrl!,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // Contenido
-          Text(
-            widget.content,
-            style: const TextStyle(
-                fontSize: 14, color: AppColors.textPrimary, height: 1.5),
-          ),
-
-          //Imagenes
-          if (widget.postImageUrl != null && widget.postImageUrl!.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                widget.postImageUrl!,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => const SizedBox.shrink()
-              )
-            )
-          ],
-
-          // Hashtags
-          if (widget.hashtags.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 6,
-              children: widget.hashtags
-                  .map((tag) => Text(
-                        tag,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ))
-                  .toList(),
             ),
           ],
 
-          const SizedBox(height: 12),
+          // ── Hashtags ────────────────────────────────────────────────────
+          if (widget.hashtags.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                children: widget.hashtags
+                    .map((tag) => Text(
+                          tag,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ))
+                    .toList(),
+              ),
+            ),
+          ],
 
-          Row(
-            children: [
-              Text(
-                widget.date,
-                style:
-                    const TextStyle(fontSize: 12, color: AppColors.textMuted),
-              ),
-              const Spacer(),
-              // Comentarios
-              GestureDetector(
-                onTap: _openComments,
-                child: Row(
-                  children: [
-                    const Icon(Icons.chat_bubble_outline,
-                        size: 18, color: AppColors.textMuted),
-                    const SizedBox(width: 4),
-                    Text(
-                      '$_commentCountLocal',
-                      style: const TextStyle(
-                          fontSize: 13, color: AppColors.textMuted),
-                    ),
-                  ],
+          // ── Separador ───────────────────────────────────────────────────
+          const SizedBox(height: 12),
+          const Divider(height: 1, color: AppColors.divider),
+
+          // ── Acciones ────────────────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: Row(
+              children: [
+                // Comentarios
+                _ActionButton(
+                  icon: Icons.chat_bubble_outline_rounded,
+                  count: _commentCountLocal,
+                  onTap: _openComments,
                 ),
-              ),
-              const SizedBox(width: 16),
-              // Likes
-              GestureDetector(
-                onTap: _toggleLike,
-                child: Row(
-                  children: [
-                    Icon(
-                      _liked ? Icons.favorite : Icons.favorite_border,
-                      size: 18,
-                      color: _liked ? Colors.red : AppColors.textMuted,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '$_likes',
-                      style: const TextStyle(
-                          fontSize: 13, color: AppColors.textMuted),
-                    ),
-                  ],
+                // Likes
+                _LikeButton(
+                  liked: _liked,
+                  count: _likes,
+                  onTap: _toggleLike,
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
@@ -318,7 +312,130 @@ class _CommunityCardState extends State<CommunityCard> {
   }
 }
 
-// Motivos predefinidos ----------------------------
+// ── Widgets internos ──────────────────────────────────────────────────────────
+
+class _UserAvatar extends StatelessWidget {
+  final String name;
+  final String imageUrl;
+  final double radius;
+
+  const _UserAvatar({
+    required this.name,
+    required this.imageUrl,
+    this.radius = 22,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: AppColors.divider, width: 1.5),
+      ),
+      child: CircleAvatar(
+        radius: radius,
+        backgroundColor: AppColors.primaryLight,
+        backgroundImage: imageUrl.isNotEmpty ? NetworkImage(imageUrl) : null,
+        child: imageUrl.isEmpty
+            ? Text(
+                name.isNotEmpty ? name[0].toUpperCase() : '?',
+                style: TextStyle(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w700,
+                  fontSize: radius * 0.7,
+                ),
+              )
+            : null,
+      ),
+    );
+  }
+}
+
+class _ActionButton extends StatelessWidget {
+  final IconData icon;
+  final int count;
+  final VoidCallback onTap;
+
+  const _ActionButton({
+    required this.icon,
+    required this.count,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        child: Row(
+          children: [
+            Icon(icon, size: 18, color: AppColors.textMuted),
+            const SizedBox(width: 5),
+            Text(
+              '$count',
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LikeButton extends StatelessWidget {
+  final bool liked;
+  final int count;
+  final VoidCallback onTap;
+
+  const _LikeButton({
+    required this.liked,
+    required this.count,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        child: Row(
+          children: [
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              transitionBuilder: (child, anim) =>
+                  ScaleTransition(scale: anim, child: child),
+              child: Icon(
+                liked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                key: ValueKey(liked),
+                size: 18,
+                color: liked ? const Color(0xFFE74C3C) : AppColors.textMuted,
+              ),
+            ),
+            const SizedBox(width: 5),
+            Text(
+              '$count',
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Motivos predefinidos ───────────────────────────────────────────────────────
 const List<String> _reportReasons = [
   'Contenido inapropiado',
   'Acoso o bullying',
@@ -328,6 +445,7 @@ const List<String> _reportReasons = [
   'Otro',
 ];
 
+// ── Diálogo de reporte ─────────────────────────────────────────────────────────
 class _PublicationReportDialog extends StatefulWidget {
   final String publicationAuthor;
   final String publicationPreview;
@@ -342,7 +460,8 @@ class _PublicationReportDialog extends StatefulWidget {
       _PublicationReportDialogState();
 }
 
-class _PublicationReportDialogState extends State<_PublicationReportDialog> {
+class _PublicationReportDialogState
+    extends State<_PublicationReportDialog> {
   String? _selectedReason;
   final _detailController = TextEditingController();
   bool _submitted = false;
@@ -361,7 +480,9 @@ class _PublicationReportDialogState extends State<_PublicationReportDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      backgroundColor: AppColors.surface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: _submitted ? _SuccessView() : _FormView(),
@@ -373,35 +494,49 @@ class _PublicationReportDialogState extends State<_PublicationReportDialog> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Icon(Icons.check_circle_outline,
-            color: AppColors.primary, size: 52),
-        const SizedBox(height: 12),
+        Container(
+          width: 64,
+          height: 64,
+          decoration: const BoxDecoration(
+            color: AppColors.primaryLight,
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(Icons.check_rounded,
+              color: AppColors.primary, size: 32),
+        ),
+        const SizedBox(height: 16),
         const Text(
           'Reporte enviado',
           style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary),
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          ),
         ),
         const SizedBox(height: 8),
         const Text(
           'Gracias por ayudarnos a mantener la comunidad segura.',
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 13, color: AppColors.textMuted),
+          style: TextStyle(
+            fontSize: 13,
+            color: AppColors.textSecondary,
+            height: 1.5,
+          ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 24),
         SizedBox(
           width: double.infinity,
+          height: 48,
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
               elevation: 0,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14)),
             ),
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cerrar'),
+            child: const Text('Cerrar', style: TextStyle(fontWeight: FontWeight.w600)),
           ),
         ),
       ],
@@ -416,30 +551,51 @@ class _PublicationReportDialogState extends State<_PublicationReportDialog> {
         // Título
         Row(
           children: [
-            const Icon(Icons.flag_outlined, color: AppColors.primary, size: 20),
-            const SizedBox(width: 8),
-            const Text(
-              'Reportar publicación',
-              style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary),
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF0F0),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.flag_outlined,
+                  color: AppColors.error, size: 18),
             ),
-            const Spacer(),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Text(
+                'Reportar publicación',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
             GestureDetector(
               onTap: () => Navigator.pop(context),
-              child: const Icon(Icons.close, size: 20, color: AppColors.textMuted),
+              child: Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: AppColors.background,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.close,
+                    size: 18, color: AppColors.textMuted),
+              ),
             ),
           ],
         ),
         const SizedBox(height: 16),
 
-        // Preview de la publicación
+        // Preview
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: AppColors.background,
             borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.divider, width: 1),
           ),
           child: RichText(
             maxLines: 2,
@@ -449,14 +605,17 @@ class _PublicationReportDialogState extends State<_PublicationReportDialog> {
                 TextSpan(
                   text: '${widget.publicationAuthor}: ',
                   style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                      color: AppColors.textPrimary),
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
                 TextSpan(
                   text: widget.publicationPreview,
                   style: const TextStyle(
-                      fontSize: 12, color: AppColors.textMuted),
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ],
             ),
@@ -464,13 +623,14 @@ class _PublicationReportDialogState extends State<_PublicationReportDialog> {
         ),
         const SizedBox(height: 16),
 
-        // Motivo (lista predefinida)
+        // Motivo
         const Text(
           'Motivo del reporte',
           style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary),
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
         ),
         const SizedBox(height: 8),
         ..._reportReasons.map(
@@ -484,13 +644,13 @@ class _PublicationReportDialogState extends State<_PublicationReportDialog> {
               decoration: BoxDecoration(
                 color: _selectedReason == reason
                     ? AppColors.primaryLight
-                    : AppColors.surface,
+                    : AppColors.background,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
                   color: _selectedReason == reason
                       ? AppColors.primary
-                      : Colors.transparent,
-                  width: 1.5,
+                      : AppColors.divider,
+                  width: 1.2,
                 ),
               ),
               child: Row(
@@ -505,36 +665,47 @@ class _PublicationReportDialogState extends State<_PublicationReportDialog> {
                             : AppColors.textPrimary,
                         fontWeight: _selectedReason == reason
                             ? FontWeight.w600
-                            : FontWeight.normal,
+                            : FontWeight.w400,
                       ),
                     ),
                   ),
                   if (_selectedReason == reason)
-                    const Icon(Icons.check_circle,
+                    const Icon(Icons.check_circle_rounded,
                         color: AppColors.primary, size: 16),
                 ],
               ),
             ),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
 
         // Detalle adicional
         TextField(
           controller: _detailController,
           maxLines: 3,
-          style: const TextStyle(fontSize: 13, color: AppColors.textPrimary),
+          style: const TextStyle(
+            fontSize: 13,
+            color: AppColors.textPrimary,
+          ),
           decoration: InputDecoration(
             hintText: 'Detalle adicional (opcional)...',
             hintStyle:
                 const TextStyle(color: AppColors.textMuted, fontSize: 13),
             filled: true,
-            fillColor: AppColors.surface,
+            fillColor: AppColors.background,
             contentPadding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
+              borderSide: const BorderSide(color: AppColors.divider, width: 1),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.divider, width: 1),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
             ),
           ),
         ),
@@ -543,17 +714,18 @@ class _PublicationReportDialogState extends State<_PublicationReportDialog> {
         // Botón enviar
         SizedBox(
           width: double.infinity,
+          height: 48,
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: _selectedReason != null
                   ? AppColors.primary
-                  : AppColors.primaryLight,
+                  : AppColors.divider,
               foregroundColor: _selectedReason != null
                   ? Colors.white
                   : AppColors.textMuted,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
               elevation: 0,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14)),
             ),
             onPressed: _selectedReason != null ? _submit : null,
             child: const Text('Enviar reporte',
