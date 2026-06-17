@@ -212,7 +212,7 @@ class _RegisterViewState extends State<RegisterView> with TickerProviderStateMix
                             controller: _userNameController,
                             keyboardType: TextInputType.text,
                             prefixIcon: Icons.person_outline_rounded,
-                            activeColor: softPurpleAccent,
+                            activeColor: AppColors.primary,
                           ),
                           const SizedBox(height: 20),
 
@@ -224,7 +224,7 @@ class _RegisterViewState extends State<RegisterView> with TickerProviderStateMix
                             controller: _emailController,
                             keyboardType: TextInputType.emailAddress,
                             prefixIcon: Icons.mail_outline_rounded,
-                            activeColor: softPurpleAccent,
+                            activeColor: AppColors.primary,
                           ),
                           const SizedBox(height: 20),
 
@@ -236,7 +236,7 @@ class _RegisterViewState extends State<RegisterView> with TickerProviderStateMix
                             controller: _passwordController,
                             obscureText: _obscurePassword,
                             prefixIcon: Icons.lock_open_rounded,
-                            activeColor: softPurpleAccent,
+                            activeColor: AppColors.primary,
                             suffixIcon: IconButton(
                               icon: Icon(
                                 _obscurePassword
@@ -258,7 +258,7 @@ class _RegisterViewState extends State<RegisterView> with TickerProviderStateMix
                             controller: _confirmPasswordController,
                             obscureText: _obscureConfirm,
                             prefixIcon: Icons.lock_outline_rounded,
-                            activeColor: softPurpleAccent,
+                            activeColor: AppColors.primary,
                             suffixIcon: IconButton(
                               icon: Icon(
                                 _obscureConfirm
@@ -279,8 +279,8 @@ class _RegisterViewState extends State<RegisterView> with TickerProviderStateMix
                     _PremiumButton(
                       label: 'Crear cuenta',
                       isLoading: _isLoading,
-                      activeColor: softPurpleAccent,
-                      hoverColor: softPurpleHover,
+                      activeColor: AppColors.primary,
+                      hoverColor: AppColors.primaryMedium,
                       onPressed: _isLoading ? null : _register,
                     ),
                     const SizedBox(height: 32),
@@ -296,7 +296,7 @@ class _RegisterViewState extends State<RegisterView> with TickerProviderStateMix
                             TextSpan(
                               text: 'Inicia sesión',
                               style: TextStyle(
-                                color: softPurpleAccent,
+                                color: AppColors.primary,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -323,7 +323,7 @@ class _RegisterViewState extends State<RegisterView> with TickerProviderStateMix
                             TextSpan(
                               text: 'Términos y Condiciones',
                               style: TextStyle(
-                                color: softPurpleAccent,
+                                color: AppColors.primary,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),

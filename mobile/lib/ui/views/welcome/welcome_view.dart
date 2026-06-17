@@ -7,31 +7,53 @@ class WelcomeView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: const Color(0xFFF6F5FA), // Fondo unificado limpio de la app
       body: SafeArea(
         child: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 40),
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 32),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Logo
+                const SizedBox(height: 40),
+                
+                // Logo simple, limpio y escalado correctamente (estilo Login/Register)
                 _AppoyoLogo(),
+                
                 const SizedBox(height: 16),
-                const SizedBox(height: 60),
+                
+                // Eslogan o texto de apoyo sutil para dar contexto premium
+                Text(
+                  'Conectando comunidad y apoyo mutuo',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textSecondary.withOpacity(0.7),
+                    letterSpacing: -0.1,
+                  ),
+                ),
+                
+                const SizedBox(height: 80),
 
-                // Botón Iniciar Sesión
-                _PrimaryButton(
+                // Botón Iniciar Sesión con gradiente interactivo
+                _WelcomeActionButton(
                   label: 'Iniciar Sesión',
+                  isPrimary: true,
                   onPressed: () => Navigator.pushNamed(context, '/login'),
                 ),
+                
                 const SizedBox(height: 16),
 
-                // Botón Registrarse
-                _OutlinedPurpleButton(
+                // Botón Registrarse con estilo Outlined Premium interactivo
+                _WelcomeActionButton(
                   label: 'Registrarse',
+                  isPrimary: false,
                   onPressed: () => Navigator.pushNamed(context, '/register'),
                 ),
+                
+                const SizedBox(height: 40),
               ],
             ),
           ),
@@ -41,70 +63,103 @@ class WelcomeView extends StatelessWidget {
   }
 }
 
+// ── Widget del Logo Simple ───────────────────────────────────────────────────
 class _AppoyoLogo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Image.asset(
       'assets/images/Appoyo_logo.png',
-      width: 240,
-      height: 240,
+      width: 220, // Proporción ideal y limpia en pantalla de bienvenida
       fit: BoxFit.contain,
     );
   }
 }
 
-// Botón primario reutilizable
-class _PrimaryButton extends StatelessWidget {
+// ── Botón de Acción con Feedback Táctil unificado ────────────────────────────
+class _WelcomeActionButton extends StatefulWidget {
   final String label;
+  final bool isPrimary;
   final VoidCallback onPressed;
 
-  const _PrimaryButton({required this.label, required this.onPressed});
+  const _WelcomeActionButton({
+    required this.label,
+    required this.isPrimary,
+    required this.onPressed,
+  });
 
   @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 52,
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
-          ),
-          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-        ),
-        onPressed: onPressed,
-        child: Text(label),
-      ),
-    );
-  }
+  State<_WelcomeActionButton> createState() => _WelcomeActionButtonState();
 }
 
-// Botón outlined reutilizable
-class _OutlinedPurpleButton extends StatelessWidget {
-  final String label;
-  final VoidCallback onPressed;
-
-  const _OutlinedPurpleButton({required this.label, required this.onPressed});
+class _WelcomeActionButtonState extends State<_WelcomeActionButton> {
+  bool _pressed = false;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 52,
-      child: OutlinedButton(
-        style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.primary,
-          side: const BorderSide(color: AppColors.primary, width: 1.5),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) {
+        setState(() => _pressed = false);
+        widget.onPressed();
+      },
+      onTapCancel: () => setState(() => _pressed = false),
+      child: AnimatedScale(
+        scale: _pressed ? 0.975 : 1.0,
+        duration: const Duration(milliseconds: 120),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          width: double.infinity,
+          height: 52,
+          decoration: widget.isPrimary
+              ? BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: _pressed
+                        ? [AppColors.primary.withOpacity(0.85), AppColors.primaryMedium]
+                        : [AppColors.primary, AppColors.primaryMedium],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(26), // Bordes curvos elegantes estilo cápsula
+                  boxShadow: _pressed
+                      ? []
+                      : [
+                          BoxShadow(
+                            color: AppColors.primary.withOpacity(0.24),
+                            blurRadius: 16,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                )
+              : BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(26),
+                  border: Border.all(
+                    color: _pressed 
+                        ? AppColors.primary.withOpacity(0.5) 
+                        : const Color(0xFFF1EEFA), 
+                    width: 1.5,
+                  ),
+                  boxShadow: _pressed
+                      ? []
+                      : [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.02),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                ),
+          alignment: Alignment.center,
+          child: Text(
+            widget.label,
+            style: TextStyle(
+              fontSize: 15.5,
+              fontWeight: FontWeight.w600,
+              color: widget.isPrimary ? Colors.white : AppColors.primary,
+              letterSpacing: 0.1,
+            ),
           ),
-          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
-        onPressed: onPressed,
-        child: Text(label),
       ),
     );
   }
