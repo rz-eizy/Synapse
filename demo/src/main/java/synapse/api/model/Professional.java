@@ -2,6 +2,7 @@ package synapse.api.model;
 
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -9,10 +10,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -35,9 +39,6 @@ public class Professional {
 
     @Column(name = "current_work", nullable = false)
     private String currentWork;
-    
-    @Column(name = "stars", nullable = false)
-    private double stars = 0.0;
 
     @Column(name = "personal_contact")
     private String personalContact;
@@ -47,6 +48,10 @@ public class Professional {
 
     @Column(name = "cost_work")
     private int costWork;
+
+    @OneToMany(mappedBy = "professional", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<ProfessionalRating> ratings = new ArrayList<>();
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(
