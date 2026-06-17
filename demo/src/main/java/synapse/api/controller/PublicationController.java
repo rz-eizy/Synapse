@@ -96,7 +96,7 @@ public class PublicationController {
         User user = userService.findById(principal.getId())
             .orElseThrow(() -> new RuntimeException("Authenticated user profile not found"));
             
-        String region = user.getRegion();
+        //String region = user.getRegion();
         
         if (region == null || region.isBlank()) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);

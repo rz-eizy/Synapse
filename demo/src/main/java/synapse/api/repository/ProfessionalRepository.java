@@ -13,7 +13,7 @@ import synapse.api.dto.ProfessionalProfileDTO;
 import synapse.api.model.Professional;
 
 public interface ProfessionalRepository extends JpaRepository<Professional, UUID>{
-    @Query("SELECT new ProfessionalProfileDTO(" +
+    @Query("SELECT new synapse.api.dto.ProfessionalProfileDTO(" +
            "p.id, p.professionName, p.currentWork, p.costWork, u.username, u.profilePictureUrl, " +
            "COALESCE(AVG(r.stars), 0.0), COUNT(r)) " +
            "FROM Professional p " +
@@ -23,7 +23,7 @@ public interface ProfessionalRepository extends JpaRepository<Professional, UUID
            "GROUP BY p.id, p.professionName, p.currentWork, p.costWork, u.username, u.profilePictureUrl")
     Optional<ProfessionalProfileDTO> findProfileById(@Param("professionalId") UUID professionalId);
 
-    @Query("SELECT new ProfessionalProfileDTO(" +
+    @Query("SELECT new synapse.api.dto.ProfessionalProfileDTO(" +
            "p.id, p.professionName, p.currentWork, p.costWork, u.username, u.profilePictureUrl, " +
            "COALESCE(AVG(r.stars), 0.0), COUNT(r)) " +
            "FROM Professional p " +
