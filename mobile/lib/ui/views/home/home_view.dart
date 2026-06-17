@@ -12,6 +12,7 @@ import 'package:mobile/core/models/commentModel.dart';
 import 'professional_view.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import '../../../core/services/userService.dart';
 
 class _TourStep {
   final String title;
@@ -35,6 +36,7 @@ class HomeView extends StatefulWidget {
 class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   int _selectedTab = 0;
   int _selectedNav = 0;
+  bool _isProfessional = false;
 
   final _comunidadListKey = GlobalKey<_ComunidadListState>();
 
@@ -46,6 +48,27 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   final _keyTabs       = GlobalKey();
   final _keyFirstCard  = GlobalKey();
   final _keyBottomNav  = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    _checkUserRole();
+  }
+
+  Future<void> _checkUserRole() async {
+    const storage = FlutterSecureStorage();
+    final token = await storage.read(key: 'jwt_token') ?? '';
+    if (token.isEmpty) return;
+
+    final apiService = UserApiService();
+    final profileData = await apiService.getMyProfile(token);
+
+    if (profileData != null && mounted) {
+      setState(() {
+        _isProfessional = profileData['role'] == 'professional'; 
+      });
+    }
+  }
 
   List<_TourStep> _buildSteps() {
     final size = MediaQuery.of(context).size;
@@ -101,7 +124,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     ];
   }
 
-  void _openPublishSheet() {
+  void _openPublishSheet(bool isProfessional) {
     final contentController  = TextEditingController();
     final hashtagController  = TextEditingController();
     final ImagePicker picker = ImagePicker();
@@ -439,7 +462,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                     padding: const EdgeInsets.fromLTRB(16, 10, 20, 18),
                     child: Row(
                       children: [
-                        if (_selectedTab == 0)
+                        if (isProfessional)
                           IconButton(
                             icon: const Icon(Icons.image_outlined,
                                 color: AppColors.primary),
@@ -449,6 +472,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                           )
                         else
                           const SizedBox(width: 24),
+                        
                         const Spacer(),
                         Text(
                           '$remaining',
@@ -570,7 +594,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
             selectedIndex: _selectedNav,
             onTap: (i) {
               if (i == 1) {
-                _openPublishSheet();
+                _openPublishSheet(_isProfessional);
               } else if (i == 2) {
                 Navigator.push(
                   context,

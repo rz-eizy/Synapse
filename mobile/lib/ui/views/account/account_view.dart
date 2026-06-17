@@ -80,8 +80,10 @@ class _AccountViewState extends State<AccountView>
 
         _isLoading = false;
       });
+      _fadeController.forward();
     } else {
       setState(() => _isLoading = false);
+      _fadeController.forward();
     }
   }
 
