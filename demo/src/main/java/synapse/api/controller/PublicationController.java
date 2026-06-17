@@ -88,6 +88,7 @@ public class PublicationController {
     @GetMapping("/feed")
     public ResponseEntity<Page<Publication>> getGeneralFeed(
         @AuthenticationPrincipal CustomUserDetails principal,
+        @RequestParam("region") String region,
         @RequestParam(value = "authorId", required = false) UUID authorId,
         @RequestParam(value = "page", defaultValue = "0") int page,
         @RequestParam(value = "size", defaultValue = "20") int size 
