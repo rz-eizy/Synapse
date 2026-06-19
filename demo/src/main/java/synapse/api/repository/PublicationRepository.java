@@ -8,11 +8,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
 import synapse.api.model.Publication;
 
-@Repository
 public interface PublicationRepository extends JpaRepository<Publication, UUID>{
     @Query("SELECT p FROM Publication p JOIN FETCH p.author WHERE p.id = :id")
     Optional<Publication> findByIdWithAuthor(@Param("id") Long id);

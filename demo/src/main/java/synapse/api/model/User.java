@@ -44,7 +44,7 @@ public class User {
     @JsonIgnore
     private String password;
 
-    @Column(name = "role", nullable = false, columnDefinition = "user_role default 'regular'")
+    @Column(name = "role", nullable = false, length = 20)
     private String role = "regular";
 
     @Column(name = "profile_picture_url")
