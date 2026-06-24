@@ -47,13 +47,13 @@ public class PublicationService {
         return repository.findPublicationByFilters(regionTag, authorId, pageable);
     }
 
-    public Publication findById(Long id){
+    public Publication findById(UUID id){
         return repository.findByIdWithAuthor(id)
             .orElseThrow(() -> new RuntimeException("Publicacion no encontrada"));
     }
     
     @Transactional
-    public void handleLike(Long publicationId, boolean isLike) {
+    public void handleLike(UUID publicationId, boolean isLike) {
         Publication publication = findById(publicationId);
         if (isLike) {
             publication.incrementLikes();

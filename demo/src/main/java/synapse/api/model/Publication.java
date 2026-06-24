@@ -32,6 +32,7 @@ import lombok.Setter;
 public class Publication {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "post_id")
     private UUID id;
 
     @Column(nullable = false, length = 1000)
@@ -48,6 +49,9 @@ public class Publication {
     
     @Column(name = "likes")
     private int likes;
+
+    @org.hibernate.annotations.Formula("(SELECT COUNT(c.comment_id) FROM comments c WHERE c.post_id = post_id)")
+    private Integer commentsCount;
 
     /*  
         Implementacion futura

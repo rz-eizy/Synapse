@@ -13,7 +13,7 @@ import synapse.api.model.Publication;
 
 public interface PublicationRepository extends JpaRepository<Publication, UUID>{
     @Query("SELECT p FROM Publication p JOIN FETCH p.author WHERE p.id = :id")
-    Optional<Publication> findByIdWithAuthor(@Param("id") Long id);
+    Optional<Publication> findByIdWithAuthor(@Param("id") UUID id);
     
     @Query("SELECT p FROM Publication p JOIN FETCH p.author " +
            "WHERE (:regionTag IS NULL OR p.regionTag = :regionTag) " +

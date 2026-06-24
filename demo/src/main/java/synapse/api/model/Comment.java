@@ -23,12 +23,13 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-@Table(name = "comment")
+@Table(name = "comments")
 @NoArgsConstructor
 @AllArgsConstructor
 public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "comment_id")
     private UUID id;
 
     @Column(name = "content", length = 500, nullable = false)
