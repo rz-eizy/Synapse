@@ -30,4 +30,33 @@ class ProfessionalApiService {
       return false;
     }
   }
+  Future<bool> toggleFavorite(String token, String targetUserId) async {
+    try {
+      final response = await http.put(
+        Uri.parse('${ApiConfig.baseUrl}/user/favorites/$targetUserId'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print("Error toggling favorite: $e");
+      return false;
+    }
+  }
+  Future<List<String>> getFavoriteProfessionalIds(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConfig.baseUrl}/user/me'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
+        final List<dynamic> favs = data['favoriteProfessionalIds'] ?? [];
+        return favs.map((e) => e.toString()).toList();
+      }
+      return [];
+    } catch (e) {
+      print("Error fetching user profile/favorites: $e");
+      return [];
+    }
+  }
 }

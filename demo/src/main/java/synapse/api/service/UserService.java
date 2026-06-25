@@ -44,6 +44,7 @@ public class UserService {
         return UserDTO.fromEntityMinimal(savedUser);
     }
 
+    @Transactional(readOnly = true)
     public UserProfileDTO getUserInfo(UUID idUser){
         UserProfileDTO uProfile = new UserProfileDTO();
         User u = userRepository.findById(idUser).orElse(null);
@@ -55,6 +56,13 @@ public class UserService {
         var userPostsPage = publicationRepository.findPublicationByFilters(null, idUser, pageable);
     
         uProfile.setPublications(userPostsPage.getContent()); 
+
+        java.util.List<String> favIds = new java.util.ArrayList<>();
+        for (User fav : u.getFavorites()) {
+            favIds.add(fav.getId().toString());
+        }
+        uProfile.setFavoriteProfessionalIds(favIds);
+
         return uProfile;
     }
 
@@ -77,9 +85,8 @@ public class UserService {
         User targetUser = userRepository.findById(targetUserId)
                 .orElseThrow(UserNotFound::new);
         // Si ya es favorito al hacer clic nuevamente este se elimina de la lista
-        if (currentUser.getFavorites().contains(targetUser)) {
-            currentUser.getFavorites().remove(targetUser);
-        } else{
+        boolean removed = currentUser.getFavorites().removeIf(u -> u.getId().equals(targetUserId));
+        if (!removed) {
             currentUser.getFavorites().add(targetUser);
         }
     }

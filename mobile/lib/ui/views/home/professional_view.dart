@@ -77,15 +77,20 @@ class _ProfessionalsViewState extends State<ProfessionalsView>
   Future<void> _loadProfessionals() async {
     final token = await _storage.read(key: 'jwt_token') ?? '';
     final data = await _apiService.getProfessionals(token);
+    final favIds = await _apiService.getFavoriteProfessionalIds(token);
     
     if (data != null && data['content'] != null) {
       final List<dynamic> content = data['content'];
       setState(() {
         _professionals = content.map((json) => _Professional.fromJson(json)).toList();
+        _favorites.clear();
+        _favorites.addAll(favIds);
         _isLoading = false;
       });
     } else {
       setState(() {
+        _favorites.clear();
+        _favorites.addAll(favIds);
         _isLoading = false;
       });
     }
@@ -97,14 +102,31 @@ class _ProfessionalsViewState extends State<ProfessionalsView>
     super.dispose();
   }
 
-  void _toggleFavorite(String handle) {
+  Future<void> _toggleFavorite(_Professional p) async {
     setState(() {
-      if (_favorites.contains(handle)) {
-        _favorites.remove(handle);
+      if (_favorites.contains(p.id)) {
+        _favorites.remove(p.id);
       } else {
-        _favorites.add(handle);
+        _favorites.add(p.id);
       }
     });
+
+    final token = await _storage.read(key: 'jwt_token') ?? '';
+    final success = await _apiService.toggleFavorite(token, p.id);
+    if (!success) {
+      if (mounted) {
+        setState(() {
+          if (_favorites.contains(p.id)) {
+            _favorites.remove(p.id);
+          } else {
+            _favorites.add(p.id);
+          }
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Error al actualizar favoritos')),
+        );
+      }
+    }
   }
 
   void _openProfile(_Professional p) {
@@ -114,8 +136,8 @@ class _ProfessionalsViewState extends State<ProfessionalsView>
       backgroundColor: Colors.transparent,
       builder: (_) => _ProfessionalProfileSheet(
         professional: p,
-        isFavorite: _favorites.contains(p.handle),
-        onToggleFavorite: () => _toggleFavorite(p.handle),
+        isFavorite: _favorites.contains(p.id),
+        onToggleFavorite: () => _toggleFavorite(p),
         onRate: (stars) async {
           final token = await _storage.read(key: 'jwt_token') ?? '';
           final success = await _apiService.rateProfessional(token, p.id, stars);
@@ -131,7 +153,7 @@ class _ProfessionalsViewState extends State<ProfessionalsView>
   Widget build(BuildContext context) {
     final list = _selectedTab == 0
         ? _professionals
-        : _professionals.where((p) => _favorites.contains(p.handle)).toList();
+        : _professionals.where((p) => _favorites.contains(p.id)).toList();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF6F5FA),
@@ -254,8 +276,8 @@ class _ProfessionalsViewState extends State<ProfessionalsView>
                           padding: const EdgeInsets.only(bottom: 12),
                           child: _ProfessionalListItem(
                             professional: p,
-                            isFavorite: _favorites.contains(p.handle),
-                            onToggleFavorite: () => _toggleFavorite(p.handle),
+                            isFavorite: _favorites.contains(p.id),
+                            onToggleFavorite: () => _toggleFavorite(p),
                             onViewProfile: () => _openProfile(p),
                           ),
                         );

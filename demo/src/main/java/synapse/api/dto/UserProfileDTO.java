@@ -17,4 +17,5 @@ public class UserProfileDTO {
     private String username;
     private String profilePictureUrl;
     private List<Publication> publications = new ArrayList<>();
+    private List<String> favoriteProfessionalIds = new ArrayList<>();
 }
