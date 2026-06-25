@@ -72,8 +72,8 @@ public class ProfessionalService {
         return repository.findProfessionalByFilters(professionName, currentWork, stars, pageable);
     }
 
-   @Transactional
-   public void addProfessionalRating(UUID reviewerId, UUID professionalId, double stars) {
+    @Transactional
+    public void addProfessionalRating(UUID reviewerId, UUID professionalId, double stars) {
         Optional<ProfessionalRating> ratingExist = ratingRepository.findByReviewerIdAndProfessionalId(reviewerId, professionalId);
         if (ratingExist.isPresent()) {
             ProfessionalRating rating = ratingExist.get();
@@ -90,5 +90,10 @@ public class ProfessionalService {
             newRating.setStars(stars);
             ratingRepository.save(newRating);
         }
-   }
+    }
+
+    public Page<ProfessionalProfileDTO> getFavoriteProfessionals(UUID userId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return repository.findFavoriteProfessionalsByUserId(userId, pageable);
+    }
 }

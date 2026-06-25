@@ -16,11 +16,13 @@ public interface PublicationRepository extends JpaRepository<Publication, UUID>{
     Optional<Publication> findByIdWithAuthor(@Param("id") UUID id);
     
     @Query("SELECT p FROM Publication p JOIN FETCH p.author " +
-           "WHERE (:regionTag IS NULL OR p.regionTag = :regionTag) " +
-           "AND (:authorId IS NULL OR p.author.id = :authorId)")
+       "WHERE (:regionTag IS NULL OR p.regionTag = :regionTag) " +
+       "AND (:authorId IS NULL OR p.author.id = :authorId) " +
+       "AND (:hasPhoto IS NULL OR (:hasPhoto = true AND p.imageUrl IS NOT NULL) OR (:hasPhoto = false AND p.imageUrl IS NULL))")
     Page<Publication> findPublicationByFilters(
         @Param("regionTag") String regionTag,
         @Param("authorId") UUID authorId,
+        @Param("hasPhoto") Boolean hasPhoto,
         Pageable pageable
     );
 }

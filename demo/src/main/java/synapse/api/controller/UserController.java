@@ -1,16 +1,20 @@
 package synapse.api.controller;
 
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import synapse.api.dto.EditProfileRequestDTO;
+import synapse.api.dto.ProfessionalProfileDTO;
 import synapse.api.dto.UserProfileDTO;
 import synapse.api.model.User;
 import synapse.api.security.CustomUserDetails;
+import synapse.api.service.ProfessionalService;
 import synapse.api.service.UserService;
 
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -25,9 +29,11 @@ import org.springframework.web.bind.annotation.PutMapping;
 @RequestMapping("/api/user")
 public class UserController {
     private final UserService service;
+    private final ProfessionalService professionalService;
 
-    public UserController(UserService service){
+    public UserController(UserService service, ProfessionalService professionalService){
         this.service = service;
+        this.professionalService = professionalService;
     }
     @GetMapping("/me")
     public ResponseEntity<UserProfileDTO> getUserProfile(@AuthenticationPrincipal CustomUserDetails principal) {
@@ -63,5 +69,13 @@ public class UserController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
     
-        
+    @GetMapping("/favorites/professionals")
+    public ResponseEntity<Page<ProfessionalProfileDTO>> getFavoriteProfessionals(
+        @AuthenticationPrincipal CustomUserDetails principal,
+        @RequestParam(value = "page", defaultValue = "0") int page,
+        @RequestParam(value = "size", defaultValue = "20") int size
+    ) {
+        Page<ProfessionalProfileDTO> favorites = professionalService.getFavoriteProfessionals(principal.getId(), page, size);
+        return ResponseEntity.ok(favorites);
+    }
 }

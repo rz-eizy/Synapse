@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
 import synapse.api.dto.PublicationDTO;
+import synapse.api.exeption.UserNotFound;
 import synapse.api.model.Publication;
 import synapse.api.model.User;
 import synapse.api.security.CustomUserDetails;
@@ -43,7 +44,11 @@ public class PublicationController {
     }
     
     @GetMapping("/upload-url")
-    public ResponseEntity<Map<String, String>> getUploadUrl(@RequestParam("contentType") String contentType) {
+    public ResponseEntity<Map<String, String>> getUploadUrl(
+        @AuthenticationPrincipal CustomUserDetails principal,
+        @RequestParam("contentType") String contentType
+    ) {
+        publicationService.assertCanUploadPhoto(principal.getId());
         return ResponseEntity.ok(cloudflareService.generatePresignedUploadUrl(contentType));
     }
     
@@ -88,21 +93,20 @@ public class PublicationController {
     @GetMapping("/feed")
     public ResponseEntity<Page<Publication>> getGeneralFeed(
         @AuthenticationPrincipal CustomUserDetails principal,
-        @RequestParam("region") String region,
         @RequestParam(value = "authorId", required = false) UUID authorId,
+        @RequestParam(value = "hasPhoto", required = false) Boolean hasPhoto,
         @RequestParam(value = "page", defaultValue = "0") int page,
         @RequestParam(value = "size", defaultValue = "20") int size 
     ) {
         User user = userService.findById(principal.getId())
-            .orElseThrow(() -> new RuntimeException("Authenticated user profile not found"));
-            
+            .orElseThrow(UserNotFound::new);
+
         String region = user.getRegion();
-        
         if (region == null || region.isBlank()) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-        
-        Page<Publication> feed = publicationService.getFilteredPublications(region, authorId, page, size);
+
+        Page<Publication> feed = publicationService.getFilteredPublications(region, authorId, hasPhoto, page, size);
         return ResponseEntity.ok(feed); 
     }
 }

@@ -52,7 +52,7 @@ public class UserService {
         uProfile.setUsername(u.getUsername());
         uProfile.setProfilePictureUrl(u.getProfilePictureUrl());
         var pageable = PageRequest.of(0, 50, Sort.by("createdAt").descending());
-        var userPostsPage = publicationRepository.findPublicationByFilters(null, idUser, pageable);
+        var userPostsPage = publicationRepository.findPublicationByFilters(u.getRegion(), idUser, null, pageable);
     
         uProfile.setPublications(userPostsPage.getContent()); 
         return uProfile;
