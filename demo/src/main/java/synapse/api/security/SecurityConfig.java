@@ -37,14 +37,13 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            /* 
             .exceptionHandling(ex -> ex
                 .authenticationEntryPoint((req, res, e) -> {
-                    res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    res.setStatus(401);
                     res.setContentType("application/json");
-                    res.getWriter().write("{\"error\":\"Unauthorized\"}");
+                    res.getWriter().write("{\"error\":\"Unauthorized: \"" + e.getMessage() + "\"}");
                 } 
-            )) */
+            )) 
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }

@@ -56,14 +56,14 @@ public class ProfessionalController {
     }
 
     @GetMapping("/{idProfessional}")
-    public ResponseEntity<Professional> getMethodName(
+    public ResponseEntity<ProfessionalProfileDTO> getMethodName(
         @PathVariable UUID idProfessional
     ) {
-        Professional pro = service.findProfessionalById(idProfessional);
+        ProfessionalProfileDTO pro = service.findProfessionalById(idProfessional);
         return ResponseEntity.ok(pro);
     }
     
-    @GetMapping()
+    @GetMapping("/list")
     public ResponseEntity<Page<ProfessionalProfileDTO>> getMethodName(
         @RequestParam(value = "profession_name", required = false) String professionName,
         @RequestParam(value = "current_work", required = false) String currentWork,
