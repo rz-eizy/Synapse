@@ -5,6 +5,7 @@ import '../../../core/services/professionalService.dart';
 
 // Modelo de datos para un profesional
 class _Professional {
+  final String id;
   final String name;
   final String handle;
   final String imageUrl;
@@ -14,6 +15,7 @@ class _Professional {
   final List<String> modalities;
 
   const _Professional({
+    required this.id,
     required this.name,
     required this.handle,
     required this.imageUrl,
@@ -25,6 +27,7 @@ class _Professional {
 
   factory _Professional.fromJson(Map<String, dynamic> json) {
     return _Professional(
+      id: json['professionalId'] ?? '',
       name: json['username'] ?? 'Desconocido',
       handle: '@${json['professionName'] ?? 'Profesional'}',
       imageUrl: json['profilePictureUrl'] ?? '',
@@ -113,6 +116,13 @@ class _ProfessionalsViewState extends State<ProfessionalsView>
         professional: p,
         isFavorite: _favorites.contains(p.handle),
         onToggleFavorite: () => _toggleFavorite(p.handle),
+        onRate: (stars) async {
+          final token = await _storage.read(key: 'jwt_token') ?? '';
+          final success = await _apiService.rateProfessional(token, p.id, stars);
+          if (success) {
+            _loadProfessionals();
+          }
+        },
       ),
     );
   }
@@ -574,11 +584,13 @@ class _ProfessionalProfileSheet extends StatefulWidget {
   final _Professional professional;
   final bool isFavorite;
   final VoidCallback onToggleFavorite;
+  final Function(double) onRate;
 
   const _ProfessionalProfileSheet({
     required this.professional,
     required this.isFavorite,
     required this.onToggleFavorite,
+    required this.onRate,
   });
 
   @override
@@ -682,33 +694,36 @@ class _ProfessionalProfileSheetState extends State<_ProfessionalProfileSheet> {
                       ),
                     ),
                     const SizedBox(height: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFF8E7),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.star_rounded,
-                            size: 14,
-                            color: Color(0xFFFFC940),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            p.rating.toStringAsFixed(1),
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF8A6800),
+                    GestureDetector(
+                      onTap: () => _showRatingDialog(context, p.name, widget.onRate),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFF8E7),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.star_rounded,
+                              size: 14,
+                              color: Color(0xFFFFC940),
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 4),
+                            Text(
+                              p.rating.toStringAsFixed(1),
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF8A6800),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -758,6 +773,60 @@ class _ProfessionalProfileSheetState extends State<_ProfessionalProfileSheet> {
           _ContactButton(onPressed: () {}),
         ],
       ),
+    );
+  }
+
+  void _showRatingDialog(BuildContext context, String name, Function(double) onRate) {
+    double selectedStars = 5.0;
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              backgroundColor: Colors.white,
+              title: Text('Calificar a $name', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+              content: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(5, (index) {
+                  return IconButton(
+                    icon: Icon(
+                      index < selectedStars ? Icons.star_rounded : Icons.star_border_rounded,
+                      color: const Color(0xFFFFC940),
+                      size: 36,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        selectedStars = index + 1.0;
+                      });
+                    },
+                  );
+                }),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Cancelar', style: TextStyle(color: AppColors.textSecondary)),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    onRate(selectedStars);
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('¡Gracias por tu calificación!')),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('Enviar', style: TextStyle(color: Colors.white)),
+                ),
+              ],
+            );
+          }
+        );
+      }
     );
   }
 }

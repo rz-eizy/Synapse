@@ -18,4 +18,16 @@ class ProfessionalApiService {
       return null;
     }
   }
+  Future<bool> rateProfessional(String token, String professionalId, double stars) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${ApiConfig.baseUrl}/professional/rate/$professionalId?stars=$stars'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print("Error rating professional: $e");
+      return false;
+    }
+  }
 }
