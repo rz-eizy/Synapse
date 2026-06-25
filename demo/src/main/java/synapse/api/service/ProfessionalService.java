@@ -6,7 +6,6 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
@@ -53,9 +52,9 @@ public class ProfessionalService {
         return prof; 
     }
 
-    public Professional findProfessionalById(UUID userId) {
-        return repository.findById(userId)
-                .orElseThrow(UserNotFound::new);
+    public ProfessionalProfileDTO findProfessionalById(UUID userId) {
+        return repository.findProfileById(userId)
+                .orElseThrow(ProfessionalNotFound::new);
     }
 
     public ProfessionalProfileDTO findProfessionalProfile(UUID professionalId){
@@ -68,14 +67,14 @@ public class ProfessionalService {
         String currentWork, 
         Double stars, 
         int page, int size
-    ){
-        Pageable pageable = PageRequest.of(page, size, Sort.by("averageStars").descending());
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
         return repository.findProfessionalByFilters(professionName, currentWork, stars, pageable);
     }
 
    @Transactional
    public void addProfessionalRating(UUID reviewerId, UUID professionalId, double stars) {
-        Optional<ProfessionalRating> ratingExist = ratingRepository.findOptional(reviewerId, professionalId);
+        Optional<ProfessionalRating> ratingExist = ratingRepository.findByReviewerIdAndProfessionalId(reviewerId, professionalId);
         if (ratingExist.isPresent()) {
             ProfessionalRating rating = ratingExist.get();
             rating.setStars(stars);

@@ -44,8 +44,7 @@ public class User {
     @JsonIgnore
     private String password;
 
-    @Column(name = "role", nullable = false, columnDefinition = "user_role default 'regular'")
-    @org.hibernate.annotations.ColumnTransformer(write = "?::user_role")
+    @Column(name = "role", nullable = false)
     private String role = "regular";
 
     @Column(name = "profile_picture_url")

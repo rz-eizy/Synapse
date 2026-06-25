@@ -1,0 +1,164 @@
+.card {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    overflow: hidden;
+    transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
+    animation: fadeInUp 0.4s ease both;
+}
+
+.card:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--color-primary-xlight);
+    transform: translateY(-2px);
+}
+
+.flagged {
+    border-color: #FECACA;
+}
+
+.flagged:hover {
+    border-color: #FCA5A5;
+}
+
+/* ── Header ── */
+.cardHeader {
+    padding: 16px 18px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.authorInfo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #A78BFA, var(--color-primary-dark));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.authorMeta {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.displayName {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--color-text-primary);
+    line-height: 1.2;
+}
+
+.username {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+}
+
+/* ── Context block ── */
+.context {
+    margin: 0 18px 12px;
+    padding: 8px 12px;
+    background: var(--color-bg);
+    border-radius: var(--radius-md);
+    border-left: 3px solid var(--color-primary-light);
+}
+
+.contextLabel {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--color-text-muted);
+    margin-bottom: 3px;
+}
+
+.contextPreview {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+    font-style: italic;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ── Comment content ── */
+.content {
+    padding: 0 18px 14px;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-primary);
+    line-height: 1.65;
+}
+
+/* ── Meta row ── */
+.metaRow {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 9px 18px;
+    border-top: 1px solid var(--color-border-light);
+    border-bottom: 1px solid var(--color-border-light);
+    background: var(--color-bg);
+}
+
+.metaStat {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+    font-weight: 500;
+}
+
+.metaStatIcon {
+    font-size: 12px;
+    line-height: 1;
+}
+
+.metaStatValue {
+    font-weight: 700;
+    color: var(--color-text-primary);
+}
+
+.reportStat {
+    color: var(--color-danger);
+}
+
+.reportStat .metaStatValue {
+    color: var(--color-danger);
+}
+
+.metaDate {
+    margin-left: auto;
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+}
+
+/* ── Footer ── */
+.cardFooter {
+    padding: 11px 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: flex-end;
+    min-height: 48px;
+}
+
+.alreadyActioned {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    font-style: italic;
+}
