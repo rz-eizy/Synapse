@@ -38,4 +38,17 @@ public interface ProfessionalRepository extends JpaRepository<Professional, UUID
         @Param("stars") Double stars, 
         Pageable pageable
     );
+
+    @Query("SELECT new synapse.api.dto.ProfessionalProfileDTO(" +
+       "p.id, p.professionName, p.currentWork, p.costWork, u.username, u.profilePictureUrl, " +
+       "COALESCE(AVG(r.stars), 0.0), COUNT(r)) " +
+       "FROM Professional p " +
+       "JOIN p.user u " +
+       "LEFT JOIN p.ratings r " +
+       "WHERE u IN (SELECT fav FROM User owner JOIN owner.favorites fav WHERE owner.id = :userId) " +
+       "GROUP BY p.id, p.professionName, p.currentWork, p.costWork, u.username, u.profilePictureUrl")
+    Page<ProfessionalProfileDTO> findFavoriteProfessionalsByUserId(
+        @Param("userId") UUID userId,
+        Pageable pageable
+    );
 }
