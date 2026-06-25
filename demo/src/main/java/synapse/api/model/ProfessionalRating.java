@@ -26,7 +26,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(
-    name = "professional_rating",
+    name = "professional_ratings",
     uniqueConstraints = {
         @UniqueConstraint(columnNames = {"reviewer_id", "professional_id"})
     }
@@ -34,6 +34,7 @@ import lombok.Setter;
 public class ProfessionalRating {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "rating_id")
     private UUID id;
 
     @Min(1)

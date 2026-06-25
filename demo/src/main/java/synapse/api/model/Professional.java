@@ -5,6 +5,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import jakarta.persistence.MapsId;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,33 +22,30 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 
 @Entity
 @Getter
 @Setter
-@Table(name = "professional")
+@Table(name = "professional_profiles")
 @NoArgsConstructor
 @AllArgsConstructor
 public class Professional {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "profession_name", nullable = false)
+    @Column(name = "official_title", nullable = false)
     private String professionName;
 
-    @Column(name = "current_work", nullable = false)
+    @Column(name = "university_of_degree", nullable = false)
     private String currentWork;
 
-    @Column(name = "personal_contact")
+    @Column(name = "external_contact_link")
     private String personalContact;
 
     @Column(name = "business_hours")
     private String businessHours;
 
-    @Column(name = "cost_work")
+    @Column(name = "session_price")
     private int costWork;
 
     @OneToMany(mappedBy = "professional", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -54,6 +53,7 @@ public class Professional {
     private List<ProfessionalRating> ratings = new ArrayList<>();
 
     @OneToOne(fetch = FetchType.LAZY)
+    @MapsId
     @JoinColumn(
         name = "user_id",
         referencedColumnName = "user_id",

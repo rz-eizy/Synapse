@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/services/professionalService.dart';
 
 // Modelo de datos para un profesional
 class _Professional {
@@ -20,6 +22,18 @@ class _Professional {
     required this.institution,
     this.modalities = const [],
   });
+
+  factory _Professional.fromJson(Map<String, dynamic> json) {
+    return _Professional(
+      name: json['username'] ?? 'Desconocido',
+      handle: '@${json['professionName'] ?? 'Profesional'}',
+      imageUrl: json['profilePictureUrl'] ?? '',
+      rating: (json['averageStars'] ?? 0.0).toDouble(),
+      experience: json['currentWork'] ?? '',
+      institution: 'Institución',
+      modalities: ['Presencial', 'Remoto'],
+    );
+  }
 }
 
 class ProfessionalsView extends StatefulWidget {
@@ -37,44 +51,10 @@ class _ProfessionalsViewState extends State<ProfessionalsView>
   late final AnimationController _fadeController;
   late final Animation<double> _fadeAnimation;
 
-  static const List<_Professional> _professionals = [
-    _Professional(
-      name: 'Nathalie Espinoza',
-      handle: '@Medico',
-      imageUrl: '',
-      rating: 4.1,
-      experience: '3 años de experiencia',
-      institution: 'Universidad de Concepción',
-      modalities: ['Presencial', 'Remoto'],
-    ),
-    _Professional(
-      name: 'Juan José Roca',
-      handle: '@Psicólogo',
-      imageUrl: '',
-      rating: 4.5,
-      experience: '37 años de experiencia',
-      institution: 'Pontificia Universidad Católica de Chile',
-      modalities: ['Presencial'],
-    ),
-    _Professional(
-      name: 'Siomara Zapata',
-      handle: '@Psicóloga',
-      imageUrl: '',
-      rating: 4.9,
-      experience: '20 años de experiencia',
-      institution: 'Universidad de Chile',
-      modalities: ['Remoto'],
-    ),
-    _Professional(
-      name: 'Jessica Parra',
-      handle: '@Psicóloga',
-      imageUrl: '',
-      rating: 4.7,
-      experience: '10 años de experiencia',
-      institution: 'Universidad Austral de Chile',
-      modalities: ['Presencial', 'Remoto'],
-    ),
-  ];
+  List<_Professional> _professionals = [];
+  bool _isLoading = true;
+  final ProfessionalApiService _apiService = ProfessionalApiService();
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
   @override
   void initState() {
@@ -88,6 +68,24 @@ class _ProfessionalsViewState extends State<ProfessionalsView>
       curve: Curves.easeOut,
     );
     _fadeController.forward();
+    _loadProfessionals();
+  }
+
+  Future<void> _loadProfessionals() async {
+    final token = await _storage.read(key: 'jwt_token') ?? '';
+    final data = await _apiService.getProfessionals(token);
+    
+    if (data != null && data['content'] != null) {
+      final List<dynamic> content = data['content'];
+      setState(() {
+        _professionals = content.map((json) => _Professional.fromJson(json)).toList();
+        _isLoading = false;
+      });
+    } else {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -193,11 +191,17 @@ class _ProfessionalsViewState extends State<ProfessionalsView>
 
             // ── Lista de Tarjetas Rediseñadas ──────────────────────────────
             Expanded(
-              child: list.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
+              child: _isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.primary,
+                      ),
+                    )
+                  : list.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
                           Container(
                             width: 72,
                             height: 72,
