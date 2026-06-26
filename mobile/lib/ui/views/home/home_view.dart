@@ -38,7 +38,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   int _selectedNav = 0;
   bool _isProfessional = false;
 
-  final _comunidadListKey = GlobalKey<_ComunidadListState>();
+  final _comunidadListKey = GlobalKey<_PublicationListState>();
 
   // Tour
   bool _showTour = true;
@@ -581,10 +581,11 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
               ),
               Expanded(
                 child: _selectedTab == 0
-                    ? _ProfessionalesList(firstCardKey: _keyFirstCard)
-                    : _ComunidadList(
+                    ? _PublicationList(firstCardKey: _keyFirstCard, hasPhoto: true)
+                    : _PublicationList(
                         key: _comunidadListKey,
                         firstCardKey: _keyFirstCard,
+                        hasPhoto: false,
                       ),
               ),
             ],
@@ -924,66 +925,16 @@ class _Tab extends StatelessWidget {
 }
 
 // ── Listas ────────────────────────────────────────────────────────────────────
-class _ProfessionalesList extends StatelessWidget {
+class _PublicationList extends StatefulWidget {
   final GlobalKey? firstCardKey;
-  const _ProfessionalesList({this.firstCardKey});
+  final bool hasPhoto;
+  const _PublicationList({super.key, this.firstCardKey, required this.hasPhoto});
 
   @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.only(top: 8, bottom: 100),
-      children: [
-        ProfessionalCard(
-          key: firstCardKey,
-          name: 'Nathalie Espinoza',
-          handle: '@Psicóloga',
-          profession: 'Psicóloga Clínica',
-          imageUrl: '',
-          date: '01/05/26',
-          description:
-              'Soy Psicóloga Clínica, titulada de la Pontificia Universidad Católica de Chile, especializada en la atención de pacientes adultos.',
-          hashtags: const ['#Psicoanálisis', '#Videollamada', '#Presencial'],
-        ),
-        const ProfessionalCard(
-          name: 'Juan José Roca',
-          handle: '@Psiquiatra',
-          profession: 'Psiquiatra',
-          imageUrl: '',
-          date: '29/04/26',
-          description:
-              'Soy psiquiatra de la Universidad de Chile y mi enfoque está centrado en el tratamiento de trastornos del ánimo y ansiedad.',
-          hashtags: ['#Psiquiatría', '#Presencial'],
-        ),
-      ],
-    );
-  }
+  State<_PublicationList> createState() => _PublicationListState();
 }
 
-class _CommunityPost {
-  final String userName;
-  final String userImageUrl;
-  final String date;
-  final String content;
-  final List<String> hashtags;
-
-  const _CommunityPost({
-    required this.userName,
-    required this.userImageUrl,
-    required this.date,
-    required this.content,
-    this.hashtags = const [],
-  });
-}
-
-class _ComunidadList extends StatefulWidget {
-  final GlobalKey? firstCardKey;
-  const _ComunidadList({super.key, this.firstCardKey});
-
-  @override
-  State<_ComunidadList> createState() => _ComunidadListState();
-}
-
-class _ComunidadListState extends State<_ComunidadList> {
+class _PublicationListState extends State<_PublicationList> {
   final PublicationApiService _apiService = PublicationApiService();
   final _storage = const FlutterSecureStorage();
   late Future<List<PublicationModel>> _futurePublications;
@@ -1007,7 +958,7 @@ class _ComunidadListState extends State<_ComunidadList> {
       throw Exception(
           'Sesión expirada o no autenticado. Inicie sesión nuevamente.');
     }
-    return _apiService.fetchPublications(token, _region);
+    return _apiService.fetchPublications(token, _region, hasPhoto: widget.hasPhoto);
   }
 
   @override

@@ -5,8 +5,12 @@ import '../models/publicationModel.dart';
 import 'dart:io';
 
 class PublicationApiService {
-  Future<List<PublicationModel>> fetchPublications(String jwtToken, String region, {int page = 0, int size = 20}) async {
-    final url = Uri.parse('${ApiConfig.baseUrl}/publication/feed?region=$region&page=$page&size=$size');
+  Future<List<PublicationModel>> fetchPublications(String jwtToken, String region, {int page = 0, int size = 20, bool? hasPhoto}) async {
+    String urlString = '${ApiConfig.baseUrl}/publication/feed?region=$region&page=$page&size=$size';
+    if (hasPhoto != null) {
+      urlString += '&hasPhoto=$hasPhoto';
+    }
+    final url = Uri.parse(urlString);
 
     try {
       final response = await http.get(
