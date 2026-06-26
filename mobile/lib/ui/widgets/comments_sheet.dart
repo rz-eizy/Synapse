@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../../core/services/reportService.dart';
 
 class AppComment {
+  final String? id;
   final String author;
   final String text;
   final String time;
   final String? imageUrl;
 
   const AppComment({
+    this.id,
     required this.author,
     required this.text,
     required this.time,
@@ -601,6 +605,43 @@ class _ReportDialogState extends State<_ReportDialog> {
     super.dispose();
   }
 
+  void _submit() async {
+    if (_selectedReason == null || widget.comment.id == null) return;
+    
+    // Check token
+    const storage = FlutterSecureStorage();
+    final token = await storage.read(key: 'jwt_token');
+    if (token == null || token.isEmpty) return;
+    
+    // Cargar
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+    
+    final apiService = ReportApiService();
+    final reportType = ReportApiService.mapUIMotifToReportType(_selectedReason!);
+    
+    bool success = await apiService.createReport(
+      token,
+      reportType,
+      _detailController.text.trim(),
+      idComment: widget.comment.id,
+    );
+    
+    if (!mounted) return;
+    Navigator.pop(context); // close loading
+    
+    if (success) {
+      setState(() => _submitted = true);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error al enviar el reporte')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -845,9 +886,7 @@ class _ReportDialogState extends State<_ReportDialog> {
                 borderRadius: BorderRadius.circular(14),
               ),
             ),
-            onPressed: _selectedReason != null
-                ? () => setState(() => _submitted = true)
-                : null,
+            onPressed: _selectedReason != null ? _submit : null,
             child: const Text(
               'Enviar reporte',
               style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),

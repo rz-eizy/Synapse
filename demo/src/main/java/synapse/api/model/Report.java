@@ -2,6 +2,7 @@ package synapse.api.model;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -23,7 +24,7 @@ import synapse.api.model.enums.ReportType;
 @Entity
 @Getter
 @Setter
-@Table(name = "report")
+@Table(name = "reports")
 @NoArgsConstructor
 @AllArgsConstructor
 public class Report {
@@ -43,6 +44,7 @@ public class Report {
     private LocalDateTime createdAt = LocalDateTime.now();
     
     // Usuario que genera el reporte
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reporter_id", nullable = false)
     private User reporter;
@@ -51,14 +53,17 @@ public class Report {
         OBJETIVOS DE REPORTE:
         Todos opcionales y mutuamente excluyentes
     */
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reported_user_id")
     private User reportedUser;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "publication_id")
     private Publication publication;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "comment_id")
     private Comment comment;

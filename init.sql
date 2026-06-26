@@ -78,9 +78,11 @@ CREATE TABLE IF NOT EXISTS professional_ratings (
 CREATE TABLE IF NOT EXISTS reports (
     report_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     reporter_id UUID REFERENCES users(user_id) ON DELETE SET NULL,
-    reported_post_id UUID REFERENCES posts(post_id) ON DELETE SET NULL,
-    reported_comment_id UUID REFERENCES comments(comment_id) ON DELETE SET NULL,
-    reason TEXT, -- RF-09 [cite: 14]
+    reported_user_id UUID REFERENCES users(user_id) ON DELETE SET NULL,
+    publication_id UUID REFERENCES posts(post_id) ON DELETE SET NULL,
+    comment_id UUID REFERENCES comments(comment_id) ON DELETE SET NULL,
+    report_type VARCHAR(30) NOT NULL,
+    description TEXT,
     is_reviewed BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

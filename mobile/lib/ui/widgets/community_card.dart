@@ -5,6 +5,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../core/services/commentService.dart';
 import '../../core/models/commentModel.dart';
 import '../../core/services/publicationService.dart';
+import '../../core/services/reportService.dart';
 
 class CommunityCard extends StatefulWidget {
   final String? id;
@@ -95,6 +96,7 @@ class _CommunityCardState extends State<CommunityCard> {
 
     final List<AppComment> uiComments = serverComments.map((c) {
       return AppComment(
+        id: c.id,
         author: c.authorName,
         text: c.content,
         time: 'hace poco',
@@ -126,9 +128,11 @@ class _CommunityCardState extends State<CommunityCard> {
   void _openReportSheet() {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (_) => _PublicationReportDialog(
         publicationAuthor: widget.userName,
         publicationPreview: widget.content,
+        publicationId: widget.id ?? '',
       ),
     );
   }
@@ -449,10 +453,12 @@ const List<String> _reportReasons = [
 class _PublicationReportDialog extends StatefulWidget {
   final String publicationAuthor;
   final String publicationPreview;
+  final String publicationId;
 
   const _PublicationReportDialog({
     required this.publicationAuthor,
     required this.publicationPreview,
+    required this.publicationId,
   });
 
   @override
@@ -472,9 +478,41 @@ class _PublicationReportDialogState
     super.dispose();
   }
 
-  void _submit() {
-    if (_selectedReason == null) return;
-    setState(() => _submitted = true);
+  void _submit() async {
+    if (_selectedReason == null || widget.publicationId.isEmpty) return;
+    
+    // Check token
+    const storage = FlutterSecureStorage();
+    final token = await storage.read(key: 'jwt_token');
+    if (token == null || token.isEmpty) return;
+    
+    // Cargar
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+    
+    final apiService = ReportApiService();
+    final reportType = ReportApiService.mapUIMotifToReportType(_selectedReason!);
+    
+    bool success = await apiService.createReport(
+      token,
+      reportType,
+      _detailController.text.trim(),
+      idPublication: widget.publicationId,
+    );
+    
+    if (!mounted) return;
+    Navigator.pop(context); // close loading
+    
+    if (success) {
+      setState(() => _submitted = true);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error al enviar el reporte')),
+      );
+    }
   }
 
   @override
