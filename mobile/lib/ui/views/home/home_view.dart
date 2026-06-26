@@ -41,7 +41,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   final _comunidadListKey = GlobalKey<_PublicationListState>();
 
   // Tour
-  bool _showTour = true;
+  bool _showTour = false;
   int _tourStep  = 0;
 
   // GlobalKeys
@@ -53,6 +53,17 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _checkUserRole();
+    _checkTour();
+  }
+
+  Future<void> _checkTour() async {
+    const storage = FlutterSecureStorage();
+    final hasSeenTour = await storage.read(key: 'has_seen_tour');
+    if (hasSeenTour == null && mounted) {
+      setState(() {
+        _showTour = true;
+      });
+    }
   }
 
   Future<void> _checkUserRole() async {
@@ -498,16 +509,22 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     );
   }
 
+  void _finishTour() async {
+    setState(() => _showTour = false);
+    const storage = FlutterSecureStorage();
+    await storage.write(key: 'has_seen_tour', value: 'true');
+  }
+
   void _nextStep() {
     final steps = _buildSteps();
     if (_tourStep < steps.length - 1) {
       setState(() => _tourStep++);
     } else {
-      setState(() => _showTour = false);
+      _finishTour();
     }
   }
 
-  void _skipTour() => setState(() => _showTour = false);
+  void _skipTour() => _finishTour();
 
   @override
   Widget build(BuildContext context) {
