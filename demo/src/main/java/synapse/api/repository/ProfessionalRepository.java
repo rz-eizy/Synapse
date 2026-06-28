@@ -51,4 +51,6 @@ public interface ProfessionalRepository extends JpaRepository<Professional, UUID
         @Param("userId") UUID userId,
         Pageable pageable
     );
+
+    Optional<Professional> findByUserId(UUID userId);
 }

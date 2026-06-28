@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
+import synapse.api.dto.EditProfileProfessionalRequestDTO;
 import synapse.api.dto.ProfessionalProfileDTO;
 import synapse.api.exeption.ProfessionalNotFound;
 import synapse.api.exeption.UserNotFound;
@@ -83,5 +84,30 @@ public class ProfessionalService {
     public Page<ProfessionalProfileDTO> getFavoriteProfessionals(UUID userId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         return repository.findFavoriteProfessionalsByUserId(userId, pageable);
+    }
+
+    @Transactional
+    public Professional editProfessionalProfile(UUID id, EditProfileProfessionalRequestDTO dto) {
+        editUserData(id, dto);
+        
+        Professional p = repository.findByUserId(id)
+            .orElseThrow(ProfessionalNotFound::new);
+        
+        if (dto.getProfessionName() != null && !dto.getProfessionName().isBlank()) p.setProfessionName(dto.getProfessionName());
+        if (dto.getCurrentWork() != null && !dto.getCurrentWork().isBlank()) p.setCurrentWork(dto.getCurrentWork());
+        if (dto.getPersonalContact() != null && !dto.getPersonalContact().isBlank()) p.setPersonalContact(dto.getPersonalContact());
+        if (dto.getBusinessHours() != null && !dto.getBusinessHours().isBlank()) p.setBusinessHours(dto.getBusinessHours());
+        if (dto.getCostWork() != null) p.setCostWork(dto.getCostWork());
+        return p; 
+    }
+
+    private void editUserData(UUID id, EditProfileProfessionalRequestDTO dto) {
+        User u = userRepository.findById(id)
+            .orElseThrow(UserNotFound::new);        
+        
+        if (dto.getUsername() != null && !dto.getUsername().isBlank()) u.setUsername(dto.getUsername());
+        if (dto.getProfilePicture() != null && !dto.getProfilePicture().isBlank()) u.setProfilePictureUrl(dto.getProfilePicture());
+        if (dto.getCurrentLocation() != null && !dto.getCurrentLocation().isBlank()) u.setRegion(dto.getCurrentLocation());
+        if (dto.getDescription() != null && !dto.getDescription().isBlank()) u.setDescription(dto.getDescription());
     }
 }
