@@ -9,4 +9,5 @@ public class EditProfileRequestDTO {
     private String username;
     private String profilePicture;
     private String currentLocation;
+    private String description;
 }
