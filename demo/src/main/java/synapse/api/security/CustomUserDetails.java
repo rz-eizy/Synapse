@@ -1,16 +1,22 @@
 package synapse.api.security;
 
-import java.util.Collection;
-import java.util.Collections;
+
+import java.util.List;
 import java.util.UUID;
+import java.time.Clock;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Collection;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+
 
 import synapse.api.model.User;
 
 public class CustomUserDetails implements UserDetails {
-
+    private static final Clock clock = Clock.system(ZoneId.of("America/Santiago"));
     private transient User user;
 
     public CustomUserDetails(User user) {
@@ -20,7 +26,20 @@ public class CustomUserDetails implements UserDetails {
     // Cambiar cuando se implementen rol de usuarios
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.emptyList();
+        String rolName = switch (user.getRole()) {
+            case "professional" -> "PROFESSIONAL";
+            case "admin" -> "ADMIN";
+            default -> "USER";
+        };
+        return List.of(new SimpleGrantedAuthority("ROLE_" + rolName));
+    }
+    @Override
+    public boolean isEnabled() {
+        return switch (user.getAccountStatus()) {
+            case BANNED -> false;
+            case SUSPENDED -> user.getSuspendedUntil() != null && LocalDateTime.now(clock).isAfter(user.getSuspendedUntil());
+            case ACTIVE -> true;
+        };
     }
 
     @Override
@@ -44,6 +63,4 @@ public class CustomUserDetails implements UserDetails {
     public boolean isAccountNonLocked() { return true;}
     @Override
     public boolean isCredentialsNonExpired() { return true;}
-    @Override
-    public boolean isEnabled() { return true;}
 }
