@@ -318,16 +318,6 @@ class _RegisterViewState extends State<RegisterView> with TickerProviderStateMix
                             height: 1.6,
                             letterSpacing: 0.1,
                           ),
-                          children: [
-                            TextSpan(text: 'Al registrarte aceptas nuestros '),
-                            TextSpan(
-                              text: 'Términos y Condiciones',
-                              style: TextStyle(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
                         ),
                       ),
                     ),

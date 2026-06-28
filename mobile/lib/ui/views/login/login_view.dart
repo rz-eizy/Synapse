@@ -278,16 +278,6 @@ class _LoginViewState extends State<LoginView> with SingleTickerProviderStateMix
                             color: Color(0xFF6B6687),
                             height: 1.5,
                           ),
-                          children: [
-                            TextSpan(text: 'Al completar el proceso de inicio estarás aceptando nuestros '),
-                            TextSpan(
-                              text: 'Términos y Condiciones.',
-                              style: TextStyle(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
                         ),
                       ),
                     ),
