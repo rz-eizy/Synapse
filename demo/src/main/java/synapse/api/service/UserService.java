@@ -44,8 +44,8 @@ public class UserService {
         u.setUsername(req.getName());
         u.setEmail(req.getEmail());
         u.setPassword(passwordEncoder.encode(req.getPassword()));
+        u.setRegion("Araucanía");
         u.setCreatedAt(LocalDateTime.now(clock));
-        
         User savedUser = userRepository.save(u);
         return UserDTO.fromEntityMinimal(savedUser);
     }

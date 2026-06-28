@@ -7,4 +7,34 @@ services:
     ports:
       - "${DB_PORT}:5432"
     volumes:
+      - postgres_data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./demo
+      dockerfile: Dockerfile
+    container_name: synapse_backend
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/postgres
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - JWT_ALGORITHM=${JWT_ALGORITHM}
+      - JWT_EXPIRATION=${JWT_EXPIRATION}
+      - JWT_REFRESH_EXPIRATION=${JWT_REFRESH_EXPIRATION}
+      - CLOUDFLARE_ACOUNT=${CLOUDFLARE_ACOUNT}
+      - CLOUDFLARE_ACCESS_KEY=${CLOUDFLARE_ACCESS_KEY}
+      - CLOUDFLARE_SECRET_KEY=${CLOUDFLARE_SECRET_KEY}
+      - CLOUDFLARE_BUCKET_NAME=${CLOUDFLARE_BUCKET_NAME}
+      - CLOUDFLARE_PUBLIC_ID=${CLOUDFLARE_PUBLIC_ID}
+    depends_on:
+      - db
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
