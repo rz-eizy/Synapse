@@ -542,8 +542,8 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
               child: Container(height: 1, color: const Color(0xFFF0F0F5)),
             ),
             title: Image.asset(
-              'assets/images/AppBar_logoAppoyo.png',
-              height: 26,
+              'assets/images/Appoyo_logo.png',
+              height: 65,
               errorBuilder: (_, __, ___) => const Text(
                 'APPOYO',
                 style: TextStyle(
