@@ -14,8 +14,8 @@ import synapse.api.model.enums.ReportType;
 
 public interface CommentRepository extends JpaRepository<Comment, UUID>{
     @Query("SELECT c FROM Comment c JOIN FETCH c.author " +
-            "WHERE (c.publication.id = :publicationId)" +
-            "AND (:status IS NULL OR p.moderationStatus = :status)")
+       "WHERE (c.publication.id = :publicationId) " +
+       "AND (:status IS NULL OR c.moderationStatus = :status)")
     Page<Comment> findByPublicationIdWithAuthor(
         @Param("publicationId") UUID publicationId,
         @Param("status") ModerationStatus status, 
