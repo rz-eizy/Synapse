@@ -54,7 +54,8 @@ public class UserController {
             principal.getId(), 
             request.getUsername(), 
             request.getProfilePicture(), 
-            request.getCurrentLocation()
+            request.getCurrentLocation(),
+            request.getDescription()
         );
         return new ResponseEntity<>(u, HttpStatus.OK);
     }
