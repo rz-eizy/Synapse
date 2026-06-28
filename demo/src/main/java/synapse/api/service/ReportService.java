@@ -1,6 +1,9 @@
 package synapse.api.service;
 
 import java.util.UUID;
+import java.time.Clock;
+import java.time.ZoneId;
+import java.time.LocalDateTime;
 
 import org.springframework.stereotype.Service;
 
@@ -21,6 +24,7 @@ import synapse.api.repository.UserRepository;
 
 @Service
 public class ReportService {
+    private static final Clock clock = Clock.system(ZoneId.of("America/Santiago"));
     private final PublicationRepository publicationRepository;
     private final CommentRepository commentRepository;
     private final ReportRepository reportRepository;
@@ -56,12 +60,14 @@ public class ReportService {
         Report report = new Report();
         report.setType(dto.getType());
         report.setDescription(dto.getDescription());
+        report.setCreatedAt(LocalDateTime.now(clock));
         
         User reporter = userRepository.findById(reporterId).orElseThrow(UserNotFound::new);
         report.setReporter(reporter);
         
         if (dto.getIdPublication() != null) {
             Publication pub = publicationRepository.findById(dto.getIdPublication()).orElseThrow(PublicationNotFound::new);
+            pub.setModerationStatus(synapse.api.model.enums.ModerationStatus.PENDING);
             report.setPublication(pub);
         }
 
@@ -69,9 +75,10 @@ public class ReportService {
             User reportedU = userRepository.findById(dto.getIdReportedUser()).orElseThrow(UserNotFound::new);
             report.setReportedUser(reportedU);
         }
-        
+
         if (dto.getIdComment() != null) {
             Comment com = commentRepository.findById(dto.getIdComment()).orElseThrow(CommentNotFound::new);
+            com.setModerationStatus(synapse.api.model.enums.ModerationStatus.PENDING);
             report.setComment(com);
         }
         reportRepository.save(report);

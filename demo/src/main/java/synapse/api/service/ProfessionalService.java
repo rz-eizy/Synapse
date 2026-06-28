@@ -1,5 +1,8 @@
 package synapse.api.service;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -10,7 +13,6 @@ import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
 import synapse.api.dto.ProfessionalProfileDTO;
-import synapse.api.dto.ProfessionalRequestDTO;
 import synapse.api.exeption.ProfessionalNotFound;
 import synapse.api.exeption.UserNotFound;
 import synapse.api.model.Professional;
@@ -25,6 +27,7 @@ public class ProfessionalService {
     private final UserRepository userRepository;
     private final ProfessionalRepository repository;
     private final ProfessionalRatingRepository ratingRepository;
+    private static final Clock clock = Clock.system(ZoneId.of("America/Santiago"));
 
     public ProfessionalService(
         UserRepository userRepository, 
@@ -34,22 +37,6 @@ public class ProfessionalService {
         this.ratingRepository = ratingRepository;
         this.userRepository = userRepository;
         this.repository = repository;
-    }
-
-    @Transactional
-    public Professional promoteToProfessional(UUID userId, ProfessionalRequestDTO dto) {
-        User user = userRepository.findById(userId)
-            .orElseThrow(UserNotFound::new);
-            
-        Professional prof = new Professional();
-        prof.setProfessionName(dto.getProfessionName());
-        prof.setCurrentWork(dto.getCurrentWork());
-        prof.setCostWork(dto.getCostWork());
-        prof.setUser(user); 
-        
-        user.setRole("professional"); 
-        user.setProfessional(prof);
-        return prof; 
     }
 
     public ProfessionalProfileDTO findProfessionalById(UUID userId) {
@@ -88,6 +75,7 @@ public class ProfessionalService {
             newRating.setProfessional(professional);
             newRating.setReviewer(reviewer);
             newRating.setStars(stars);
+            newRating.setCreatedAt(LocalDateTime.now(clock));
             ratingRepository.save(newRating);
         }
     }
