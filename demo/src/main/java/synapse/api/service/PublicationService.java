@@ -37,7 +37,6 @@ public class PublicationService {
 
     @Transactional
     public Publication createPublication(PublicationDTO dto, UUID authorId){
-        assertCanUploadPhoto(authorId);
         User author = userRepository.findById(authorId)
             .orElseThrow(UserNotFound::new);
         
@@ -54,8 +53,10 @@ public class PublicationService {
             }
             publication.setImageUrl(dto.getImageUrl());
             publication.setModerationStatus(ModerationStatus.PENDING);
+        } else {
+            publication.setModerationStatus(ModerationStatus.APPROVED);
         }
-        return publication;
+        return repository.save(publication);
     }
 
     private void assertCanUploadPhoto(UUID userId){
