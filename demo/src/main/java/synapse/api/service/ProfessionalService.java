@@ -1,5 +1,8 @@
 package synapse.api.service;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -9,8 +12,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
+import synapse.api.dto.EditProfileProfessionalRequestDTO;
 import synapse.api.dto.ProfessionalProfileDTO;
-import synapse.api.dto.ProfessionalRequestDTO;
 import synapse.api.exeption.ProfessionalNotFound;
 import synapse.api.exeption.UserNotFound;
 import synapse.api.model.Professional;
@@ -25,6 +28,7 @@ public class ProfessionalService {
     private final UserRepository userRepository;
     private final ProfessionalRepository repository;
     private final ProfessionalRatingRepository ratingRepository;
+    private static final Clock clock = Clock.system(ZoneId.of("America/Santiago"));
 
     public ProfessionalService(
         UserRepository userRepository, 
@@ -34,22 +38,6 @@ public class ProfessionalService {
         this.ratingRepository = ratingRepository;
         this.userRepository = userRepository;
         this.repository = repository;
-    }
-
-    @Transactional
-    public Professional promoteToProfessional(UUID userId, ProfessionalRequestDTO dto) {
-        User user = userRepository.findById(userId)
-            .orElseThrow(UserNotFound::new);
-            
-        Professional prof = new Professional();
-        prof.setProfessionName(dto.getProfessionName());
-        prof.setCurrentWork(dto.getCurrentWork());
-        prof.setCostWork(dto.getCostWork());
-        prof.setUser(user); 
-        
-        user.setRole("professional"); 
-        user.setProfessional(prof);
-        return prof; 
     }
 
     public ProfessionalProfileDTO findProfessionalById(UUID userId) {
@@ -88,6 +76,7 @@ public class ProfessionalService {
             newRating.setProfessional(professional);
             newRating.setReviewer(reviewer);
             newRating.setStars(stars);
+            newRating.setCreatedAt(LocalDateTime.now(clock));
             ratingRepository.save(newRating);
         }
     }
@@ -95,5 +84,30 @@ public class ProfessionalService {
     public Page<ProfessionalProfileDTO> getFavoriteProfessionals(UUID userId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         return repository.findFavoriteProfessionalsByUserId(userId, pageable);
+    }
+
+    @Transactional
+    public Professional editProfessionalProfile(UUID id, EditProfileProfessionalRequestDTO dto) {
+        editUserData(id, dto);
+        
+        Professional p = repository.findByUserId(id)
+            .orElseThrow(ProfessionalNotFound::new);
+        
+        if (dto.getProfessionName() != null && !dto.getProfessionName().isBlank()) p.setProfessionName(dto.getProfessionName());
+        if (dto.getCurrentWork() != null && !dto.getCurrentWork().isBlank()) p.setCurrentWork(dto.getCurrentWork());
+        if (dto.getPersonalContact() != null && !dto.getPersonalContact().isBlank()) p.setPersonalContact(dto.getPersonalContact());
+        if (dto.getBusinessHours() != null && !dto.getBusinessHours().isBlank()) p.setBusinessHours(dto.getBusinessHours());
+        if (dto.getCostWork() != null) p.setCostWork(dto.getCostWork());
+        return p; 
+    }
+
+    private void editUserData(UUID id, EditProfileProfessionalRequestDTO dto) {
+        User u = userRepository.findById(id)
+            .orElseThrow(UserNotFound::new);        
+        
+        if (dto.getUsername() != null && !dto.getUsername().isBlank()) u.setUsername(dto.getUsername());
+        if (dto.getProfilePicture() != null && !dto.getProfilePicture().isBlank()) u.setProfilePictureUrl(dto.getProfilePicture());
+        if (dto.getCurrentLocation() != null && !dto.getCurrentLocation().isBlank()) u.setRegion(dto.getCurrentLocation());
+        if (dto.getDescription() != null && !dto.getDescription().isBlank()) u.setDescription(dto.getDescription());
     }
 }

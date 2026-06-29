@@ -11,6 +11,7 @@ public class ErrorMessages {
 
     // Entidades
     public static final String PHOTO_UPLOAD_NOT_ALLOWED = "Solo los usuarios profesionales pueden adjuntar fotos en sus publicaciones";
+    public static final String CANNOT_MODIFY_OWN_ACCOUNT = "Un administrador no puede modificar el estado de su propia cuenta";
     public static final String PROFESSIONAL_NOT_FOUND = "El profesional no existe";
     public static final String PUBLICATION_NOT_FOUND = "La publicacion no existe";
     public static final String COMMENT_NOT_FOUND = "El comentario no existe";

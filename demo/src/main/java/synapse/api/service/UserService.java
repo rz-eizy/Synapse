@@ -1,5 +1,8 @@
 package synapse.api.service;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.UUID;
 
 import org.springframework.data.domain.PageRequest;
@@ -16,6 +19,7 @@ import synapse.api.exeption.EmailAlreadyExistsException;
 import synapse.api.exeption.UserNotFound;
 import synapse.api.exeption.UsernameAlreadyExistsException;
 import synapse.api.model.User;
+import synapse.api.model.enums.ModerationStatus;
 import synapse.api.repository.PublicationRepository;
 import synapse.api.repository.UserRepository;
 
@@ -24,6 +28,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final PublicationRepository publicationRepository;
+    private static final Clock clock = Clock.system(ZoneId.of("America/Santiago"));
 
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder,PublicationRepository publicationRepository){
         this.userRepository = userRepository;
@@ -40,7 +45,7 @@ public class UserService {
         u.setEmail(req.getEmail());
         u.setPassword(passwordEncoder.encode(req.getPassword()));
         u.setRegion("Araucanía");
-        
+        u.setCreatedAt(LocalDateTime.now(clock));
         User savedUser = userRepository.save(u);
         return UserDTO.fromEntityMinimal(savedUser);
     }
@@ -55,7 +60,7 @@ public class UserService {
         uProfile.setProfilePictureUrl(u.getProfilePictureUrl());
         uProfile.setRole(u.getRole());
         var pageable = PageRequest.of(0, 50, Sort.by("createdAt").descending());
-        var userPostsPage = publicationRepository.findPublicationByFilters(u.getRegion(), idUser, null, pageable);
+        var userPostsPage = publicationRepository.findPublicationByFilters(u.getRegion(), idUser, null, ModerationStatus.APPROVED, pageable);
     
         uProfile.setPublications(userPostsPage.getContent()); 
 
@@ -69,13 +74,13 @@ public class UserService {
     }
 
     @Transactional
-    public User editProfile(UUID id, String username, String profilePicture, String currentLocation){
+    public User editProfile(UUID id, String username, String profilePicture, String currentLocation, String description){
         User u = userRepository.findById(id)
             .orElseThrow(UserNotFound::new);        
         if (username != null && !username.isBlank()) u.setUsername(username);
         if (profilePicture != null && !profilePicture.isBlank()) u.setProfilePictureUrl(profilePicture);
         if (currentLocation != null && !currentLocation.isBlank()) u.setRegion(currentLocation);
-    
+        if (description != null && !description.isBlank()) u.setDescription(description);
         return u; 
     }
 

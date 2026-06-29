@@ -40,9 +40,15 @@ public class Report {
     @Column(name = "description", length = 500)
     private String description;
 
+    @Column(name = "resolved", nullable = false)
+    private boolean resolved = false;
+
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt;
     
+    @Column(name = "resolved_at")
+    private LocalDateTime resolvedAt;
+
     // Usuario que genera el reporte
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)

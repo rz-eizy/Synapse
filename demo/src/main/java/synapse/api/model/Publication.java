@@ -10,6 +10,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -22,6 +24,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import synapse.api.model.enums.ModerationStatus;
 
 @Entity
 @Getter
@@ -53,12 +56,9 @@ public class Publication {
     @org.hibernate.annotations.Formula("(SELECT COUNT(c.comment_id) FROM comments c WHERE c.post_id = post_id)")
     private Integer commentsCount;
 
-    /*  
-        Implementacion futura
-        Cuando esto sea falso se debe enviar a un admin para monitoreo
-    */
-    @Column(nullable = false)
-    private boolean isApproved = true;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "moderation_status", nullable = false, length = 20)
+    private ModerationStatus moderationStatus = ModerationStatus.APPROVED;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id", nullable = false)

@@ -21,6 +21,7 @@ import synapse.api.dto.PublicationDTO;
 import synapse.api.exeption.UserNotFound;
 import synapse.api.model.Publication;
 import synapse.api.model.User;
+import synapse.api.model.enums.ModerationStatus;
 import synapse.api.security.CustomUserDetails;
 import synapse.api.service.PublicationService;
 import synapse.api.service.UserService;
@@ -48,7 +49,6 @@ public class PublicationController {
         @AuthenticationPrincipal CustomUserDetails principal,
         @RequestParam("contentType") String contentType
     ) {
-        publicationService.assertCanUploadPhoto(principal.getId());
         return ResponseEntity.ok(cloudflareService.generatePresignedUploadUrl(contentType));
     }
     
@@ -68,7 +68,10 @@ public class PublicationController {
     @GetMapping("/{idPublication}")
     public ResponseEntity<Publication> getPublication(@PathVariable UUID idPublication) {
         Publication publication = publicationService.findById(idPublication);
-        return publication != null ? ResponseEntity.ok(publication) : ResponseEntity.notFound().build();
+        if (publication == null || publication.getModerationStatus() != ModerationStatus.APPROVED) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        return ResponseEntity.ok(publication);
     }
     /* 
         Dar like o quitar like de una publicacion
