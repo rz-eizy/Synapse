@@ -1,6 +1,7 @@
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { StatsCard } from '../components/StatsCard'
-import { dashboardStats } from '../data/Mocksdata'
+import { getDashboardStats } from '../services/api'
 import styles from '../styles/pages/HomePage.module.css'
 
 const activities = [
@@ -12,14 +13,33 @@ const activities = [
   { id: 6, type: 'success', text: <><strong>Cuenta verificada</strong> · @dr_hernandez confirmada como profesional de salud</>,                      time: 'Hace 2h' },
 ]
 
-const quickLinks = [
-  { to: '/comentarios',   icon: '💬', bg: '#EDE9FE', title: 'Comentarios',         sub: 'Revisar reportes',          count: 5 },
-  { to: '/comunidad',     icon: '👥', bg: '#FEF3C7', title: 'Posts Comunidad',     sub: 'Pendientes de revisión',    count: 4 },
-  { to: '/profesionales', icon: '🏥', bg: '#DBEAFE', title: 'Posts Profesionales', sub: 'Pendientes de revisión',    count: 3 },
-  { to: '/cuentas',       icon: '👤', bg: '#D1FAE5', title: 'Cuentas',             sub: 'En revisión',               count: 2 },
-]
-
 export function HomePage() {
+  const [dashboardStats, setDashboardStats] = useState({
+    pendingPosts: 0,
+    pendingComments: 0,
+    pendingAccounts: 0,
+    resolvedToday: 0,
+    totalReports: 0,
+    approvalRate: 0
+  })
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    getDashboardStats()
+      .then(data => {
+        if (data) setDashboardStats(data)
+      })
+      .catch(err => console.error('Failed to load dashboard stats', err))
+      .finally(() => setLoading(false))
+  }, [])
+
+  const quickLinks = [
+    { to: '/comentarios',   icon: '💬', bg: '#EDE9FE', title: 'Comentarios',         sub: 'Revisar reportes',          count: dashboardStats.pendingComments },
+    { to: '/comunidad',     icon: '👥', bg: '#FEF3C7', title: 'Posts Comunidad',     sub: 'Pendientes de revisión',    count: dashboardStats.pendingPosts },
+    { to: '/profesionales', icon: '🏥', bg: '#DBEAFE', title: 'Posts Profesionales', sub: 'Pendientes de revisión',    count: dashboardStats.pendingPosts },
+    { to: '/cuentas',       icon: '👤', bg: '#D1FAE5', title: 'Cuentas',             sub: 'En revisión',               count: dashboardStats.pendingAccounts },
+  ]
+
   return (
     <div className={styles.page}>
 
@@ -50,19 +70,19 @@ export function HomePage() {
         </div>
 
         <div className={styles.heroFooter}>
-          <div className={styles.heroStat}><span className={styles.heroStatValue}>{dashboardStats.resolvedToday}</span><span className={styles.heroStatLabel}>Resueltos hoy</span></div>
-          <div className={styles.heroStat}><span className={styles.heroStatValue}>{dashboardStats.totalReports}</span><span className={styles.heroStatLabel}>Reportes totales</span></div>
-          <div className={styles.heroStat}><span className={styles.heroStatValue}>{dashboardStats.approvalRate}%</span><span className={styles.heroStatLabel}>Tasa de aprobación</span></div>
+          <div className={styles.heroStat}><span className={styles.heroStatValue}>{loading ? '...' : dashboardStats.resolvedToday}</span><span className={styles.heroStatLabel}>Resueltos hoy</span></div>
+          <div className={styles.heroStat}><span className={styles.heroStatValue}>{loading ? '...' : dashboardStats.totalReports}</span><span className={styles.heroStatLabel}>Reportes totales</span></div>
+          <div className={styles.heroStat}><span className={styles.heroStatValue}>{loading ? '...' : `${dashboardStats.approvalRate}%`}</span><span className={styles.heroStatLabel}>Tasa de aprobación</span></div>
         </div>
       </section>
 
       <div className={styles.statsGrid}>
-        <StatsCard label="Publicaciones pendientes" value={dashboardStats.pendingPosts}    icon="📝" accentColor="var(--color-warning)" accentBg="var(--color-warning-light)" footer="requieren revisión hoy"    animDelay={0} />
-        <StatsCard label="Comentarios pendientes"   value={dashboardStats.pendingComments} icon="💬" accentColor="var(--color-primary)" accentBg="var(--color-primary-xxlight)" footer="en cola de moderación"   animDelay={60} />
-        <StatsCard label="Cuentas en revisión"      value={dashboardStats.pendingAccounts} icon="👤" accentColor="var(--color-info)"    accentBg="var(--color-info-light)"      footer="esperando verificación" animDelay={120} />
-        <StatsCard label="Resueltos hoy"            value={dashboardStats.resolvedToday}   icon="✅" accentColor="var(--color-success)" accentBg="var(--color-success-light)"  footer="acciones de moderación" animDelay={180} />
-        <StatsCard label="Reportes totales"         value={dashboardStats.totalReports}    icon="🚩" accentColor="var(--color-danger)"  accentBg="var(--color-danger-light)"   footer="reportes activos"       animDelay={240} />
-        <StatsCard label="Tasa de aprobación"       value={`${dashboardStats.approvalRate}%`} icon="📊" accentColor="#7C3AED" accentBg="#EDE9FE"                              footer="de contenido aprobado"  animDelay={300} />
+        <StatsCard label="Publicaciones pendientes" value={loading ? '...' : dashboardStats.pendingPosts}    icon="📝" accentColor="var(--color-warning)" accentBg="var(--color-warning-light)" footer="requieren revisión hoy"    animDelay={0} />
+        <StatsCard label="Comentarios pendientes"   value={loading ? '...' : dashboardStats.pendingComments} icon="💬" accentColor="var(--color-primary)" accentBg="var(--color-primary-xxlight)" footer="en cola de moderación"   animDelay={60} />
+        <StatsCard label="Cuentas en revisión"      value={loading ? '...' : dashboardStats.pendingAccounts} icon="👤" accentColor="var(--color-info)"    accentBg="var(--color-info-light)"      footer="esperando verificación" animDelay={120} />
+        <StatsCard label="Resueltos hoy"            value={loading ? '...' : dashboardStats.resolvedToday}   icon="✅" accentColor="var(--color-success)" accentBg="var(--color-success-light)"  footer="acciones de moderación" animDelay={180} />
+        <StatsCard label="Reportes totales"         value={loading ? '...' : dashboardStats.totalReports}    icon="🚩" accentColor="var(--color-danger)"  accentBg="var(--color-danger-light)"   footer="reportes activos"       animDelay={240} />
+        <StatsCard label="Tasa de aprobación"       value={loading ? '...' : `${dashboardStats.approvalRate}%`} icon="📊" accentColor="#7C3AED" accentBg="#EDE9FE"                              footer="de contenido aprobado"  animDelay={300} />
       </div>
 
       <section className={styles.section}>
@@ -75,7 +95,7 @@ export function HomePage() {
               <div className={styles.quickIcon} style={{ background: item.bg }}>{item.icon}</div>
               <div className={styles.quickTitle}>{item.title}</div>
               <div className={styles.quickSub}>{item.sub}</div>
-              <span className={`${styles.quickCount} ${item.count === 0 ? styles.safe : ''}`}>{item.count} pendientes</span>
+              <span className={`${styles.quickCount} ${item.count === 0 ? styles.safe : ''}`}>{loading ? '...' : item.count} pendientes</span>
             </Link>
           ))}
         </div>

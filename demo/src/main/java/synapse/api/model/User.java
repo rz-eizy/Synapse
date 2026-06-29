@@ -60,7 +60,7 @@ public class User {
     private String region;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "account_status", nullable = false, length = 20)
+    @Column(name = "account_status", length = 20)
     private AccountStatus accountStatus = AccountStatus.ACTIVE;
 
     @Column(name = "suspended_until")
@@ -83,4 +83,8 @@ public class User {
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Professional professional;
+
+    public AccountStatus getAccountStatus() {
+        return accountStatus != null ? accountStatus : AccountStatus.ACTIVE;
+    }
 }
