@@ -21,10 +21,10 @@ export function ModerationComments() {
         
         const mappedComments: Comment[] = await Promise.all(
           backendComments.map(async (com: any) => {
-            let reportsCount = 0;
+            let reportsData = [];
             try {
               const reports = await getCommentReports(com.id);
-              reportsCount = reports?.length || 0;
+              if (reports) reportsData = reports;
             } catch (e) {
               console.error("Failed to fetch reports for comment " + com.id, e);
             }
@@ -47,7 +47,8 @@ export function ModerationComments() {
               postPreview: com.publication?.content ? com.publication.content.substring(0, 50) + '...' : 'Publicación desconocida',
               content: com.content,
               likesCount: com.likes || 0,
-              reportsCount: reportsCount,
+              reportsCount: reportsData.length,
+              reports: reportsData,
               status: com.moderationStatus?.toLowerCase() || 'pending',
               createdAt: com.createdAt
             };

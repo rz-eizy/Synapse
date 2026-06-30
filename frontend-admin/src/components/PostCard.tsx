@@ -72,6 +72,17 @@ export function PostCard({ post, animDelay = 0, onModerate }: PostCardProps) {
         <span className={styles.metaDate}>{formatDate(post.createdAt)}</span>
       </div>
 
+      {post.reports && post.reports.length > 0 && (
+        <div className={styles.reportsList}>
+          <div className={styles.reportsTitle}>Detalle de reportes:</div>
+          {post.reports.map(r => (
+            <div key={r.id} className={styles.reportItem}>
+              <strong>{r.type}:</strong> {r.description || 'Sin detalles'} <em>(por @{r.reporterUsername})</em>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className={styles.cardFooter}>
         {status === 'pending' ? (
           <>

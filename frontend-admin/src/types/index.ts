@@ -22,6 +22,15 @@ export interface PostImage {
   alt?: string
 }
 
+export interface ReportDetail {
+  id: string;
+  type: string;
+  description: string;
+  createdAt: string;
+  reporterUsername: string;
+  resolved: boolean;
+}
+
 export interface Post {
   id: string
   author: User
@@ -30,6 +39,7 @@ export interface Post {
   likesCount: number
   commentsCount: number
   reportsCount: number
+  reports?: ReportDetail[]
   status: ModerationStatus
   createdAt: string
   tags?: string[]
@@ -44,6 +54,7 @@ export interface Comment {
   content: string
   likesCount: number
   reportsCount: number
+  reports?: ReportDetail[]
   status: ModerationStatus
   createdAt: string
 }

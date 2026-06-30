@@ -62,6 +62,17 @@ export function CommentCard({ comment, animDelay = 0, onModerate }: CommentCardP
         <span className={styles.metaDate}>{formatDate(comment.createdAt)}</span>
       </div>
 
+      {comment.reports && comment.reports.length > 0 && (
+        <div className={styles.reportsList}>
+          <div className={styles.reportsTitle}>Detalle de reportes:</div>
+          {comment.reports.map(r => (
+            <div key={r.id} className={styles.reportItem}>
+              <strong>{r.type}:</strong> {r.description || 'Sin detalles'} <em>(por @{r.reporterUsername})</em>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className={styles.cardFooter}>
         {status === 'pending' ? (
           <>

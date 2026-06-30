@@ -23,10 +23,10 @@ export function ModerationProfessionals() {
 
         const mappedPosts: Post[] = await Promise.all(
           professionalPosts.map(async (pub: any) => {
-            let reportsCount = 0;
+            let reportsData = [];
             try {
               const reports = await getPostReports(pub.id);
-              reportsCount = reports?.length || 0;
+              if (reports) reportsData = reports;
             } catch (e) {
               console.error("Failed to fetch reports for post " + pub.id, e);
             }
@@ -49,7 +49,8 @@ export function ModerationProfessionals() {
               images: pub.imageUrl ? [{ id: pub.id, url: pub.imageUrl }] : [],
               likesCount: pub.likes,
               commentsCount: pub.commentsCount,
-              reportsCount: reportsCount,
+              reportsCount: reportsData.length,
+              reports: reportsData,
               status: pub.moderationStatus?.toLowerCase() || 'pending',
               createdAt: pub.createdAt,
               tags: pub.regionTag ? [pub.regionTag] : [],
