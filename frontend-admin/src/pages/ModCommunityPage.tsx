@@ -19,8 +19,8 @@ export function ModerationCommunity() {
         const response = await getPosts(filter === 'all' ? undefined : filter)
         const backendPosts = response.content || []
         
-        // Filter for community posts (non-professional)
-        const communityPosts = backendPosts.filter((pub: any) => pub.author?.role !== 'PROFESSIONAL' && pub.author?.role !== 'ADMIN');
+        // Filter for community posts (only text, no images)
+        const communityPosts = backendPosts.filter((pub: any) => !pub.imageUrl);
 
         // Map Publication to Post
         const mappedPosts: Post[] = await Promise.all(

@@ -19,7 +19,8 @@ export function ModerationProfessionals() {
         const response = await getPosts(filter === 'all' ? undefined : filter)
         const backendPosts = response.content || []
         
-        const professionalPosts = backendPosts.filter((pub: any) => pub.author?.role === 'PROFESSIONAL');
+        // Filter for professional posts (has images)
+        const professionalPosts = backendPosts.filter((pub: any) => !!pub.imageUrl);
 
         const mappedPosts: Post[] = await Promise.all(
           professionalPosts.map(async (pub: any) => {
