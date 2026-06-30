@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import styles from '../styles/pages/ModProfessionalReportsPage.module.css'
+import styles from '../styles/pages/ModProfesionalReportsPage.module.css'
 
 type ModerationStatus = 'pending' | 'approved' | 'rejected'
 
