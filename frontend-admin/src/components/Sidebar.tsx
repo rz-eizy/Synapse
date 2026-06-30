@@ -16,7 +16,6 @@ const moderationNav: NavItem[] = [
   { to: '/comentarios', icon: '💬', label: 'Comentarios', badge: 5 },
   { to: '/comunidad', icon: '👥', label: 'Posts Comunidad', badge: 4 },
   { to: '/profesionales', icon: '🏥', label: 'Posts Profesionales', badge: 3 },
-    { to: '/reportesprofesionales', icon: '🚩', label: 'Reportes Profesionales', badge: 2 },
   { to: '/cuentas', icon: '👤', label: 'Cuentas', badge: 2 },
 ]
 

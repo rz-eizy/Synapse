@@ -8,7 +8,6 @@ import { ModerationProfessionals } from './pages/ModProfessionalPage'
 import { ModerationAccounts } from './pages/ModAccount'
 import { LoginPage } from './pages/LoginPage'
 import { getToken } from './services/api'
-import { ModerationProfessionalReports } from './pages/ModProfessionalReportsPage'
 
 export function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(!!getToken())
@@ -33,7 +32,6 @@ export function App() {
           <Route path="/comentarios" element={<ModerationComments />} />
           <Route path="/comunidad" element={<ModerationCommunity />} />
           <Route path="/profesionales" element={<ModerationProfessionals />} />
-          <Route path='/reportesprofesionales' element={<ModerationProfessionalReports />} />
           <Route path="/cuentas" element={<ModerationAccounts />} />
         </Routes>
       </Layout>
