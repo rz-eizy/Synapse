@@ -1,0 +1,231 @@
+.page {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.banner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    border-radius: var(--radius-lg);
+    border: 1px solid transparent;
+    font-size: var(--font-size-sm);
+    animation: fadeInUp 0.4s ease both;
+}
+
+.bannerDanger {
+    background: #FEE2E2;
+    border-color: #FCA5A5;
+    color: #991B1B;
+}
+
+.bannerIcon {
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.bannerText {
+    line-height: 1.4;
+}
+
+.bannerCount {
+    font-weight: 700;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 16px;
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+    background: var(--color-surface);
+    border: 1px solid #FCA5A5;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    animation: fadeInUp 0.4s ease both;
+    transition: box-shadow var(--transition-base), transform var(--transition-base);
+}
+
+.card:hover {
+    box-shadow: 0 8px 24px rgba(220, 38, 38, 0.1);
+    transform: translateY(-2px);
+}
+
+.cardImage {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    background: var(--color-primary-xxlight);
+}
+
+.cardBody {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px 16px 16px;
+}
+
+.cardHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.author {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.authorAvatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #A78BFA, #6D28D9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.authorName {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.reportsBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+    background: #FEE2E2;
+    color: #991B1B;
+    white-space: nowrap;
+}
+
+.content {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+}
+
+.reportsList {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 12px;
+    background: #FEF2F2;
+    border: 1px solid #FECACA;
+    border-radius: var(--radius-md);
+}
+
+.reportItem {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 12.5px;
+}
+
+.reportReason {
+    color: #991B1B;
+    font-weight: 600;
+}
+
+.reportMeta {
+    color: var(--color-text-muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.approveBtn,
+.rejectBtn {
+    flex: 1;
+    padding: 8px 12px;
+    border-radius: var(--radius-md);
+    border: 1px solid transparent;
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    font-family: var(--font-sans);
+}
+
+.approveBtn {
+    background: #D1FAE5;
+    color: #065F46;
+}
+
+.approveBtn:hover {
+    background: #A7F3D0;
+}
+
+.rejectBtn {
+    background: #FEE2E2;
+    color: #991B1B;
+}
+
+.rejectBtn:hover {
+    background: #FECACA;
+}
+
+.empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 80px 24px;
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    border: 1px dashed var(--color-border);
+    text-align: center;
+    animation: fadeInUp 0.4s ease both;
+}
+
+.emptyIcon {
+    font-size: 48px;
+    opacity: 0.5;
+}
+
+.emptyTitle {
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    color: var(--color-text-primary);
+}
+
+.emptyText {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
