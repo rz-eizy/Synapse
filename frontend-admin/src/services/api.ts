@@ -7,11 +7,11 @@ export const removeToken = () => localStorage.removeItem('token');
 async function fetchWithAuth(endpoint: string, options: RequestInit = {}) {
   const token = getToken();
   const headers = new Headers(options.headers || {});
-  
+
   if (token) {
     headers.set('Authorization', `Bearer ${token}`);
   }
-  
+
   if (!headers.has('Content-Type') && !(options.body instanceof FormData)) {
     headers.set('Content-Type', 'application/json');
   }
@@ -50,10 +50,9 @@ export async function login(email: string, password: string) {
 // Moderation API
 
 // Returns a Page<Publication> object from Spring Boot which looks like { content: [...], totalElements: 10, ... }
-export async function getPosts(status?: string, type?: string) {
+export async function getPosts(status?: string) {
   const params = new URLSearchParams();
   if (status && status !== 'all') params.append('status', status.toUpperCase());
-  if (type) params.append('type', type.toUpperCase());
   
   return fetchWithAuth(`/admin/posts?${params.toString()}`);
 }
@@ -61,7 +60,7 @@ export async function getPosts(status?: string, type?: string) {
 export async function moderatePost(id: string, action: 'APPROVED' | 'REJECTED', reason?: string) {
   return fetchWithAuth(`/admin/posts/${id}/moderate`, {
     method: 'PATCH',
-    body: JSON.stringify({ action, reason }),
+    body: JSON.stringify({ status: action, reason }),
   });
 }
 
@@ -70,10 +69,9 @@ export async function getPostReports(id: string) {
 }
 
 // Returns a Page<Comment>
-export async function getComments(status?: string, type?: string) {
+export async function getComments(status?: string) {
   const params = new URLSearchParams();
   if (status && status !== 'all') params.append('status', status.toUpperCase());
-  if (type) params.append('type', type.toUpperCase());
   
   return fetchWithAuth(`/admin/comments?${params.toString()}`);
 }
@@ -81,7 +79,7 @@ export async function getComments(status?: string, type?: string) {
 export async function moderateComment(id: string, action: 'APPROVED' | 'REJECTED', reason?: string) {
   return fetchWithAuth(`/admin/comments/${id}/moderate`, {
     method: 'PATCH',
-    body: JSON.stringify({ action, reason }),
+    body: JSON.stringify({ status: action, reason }),
   });
 }
 

@@ -16,13 +16,15 @@ export function ModerationCommunity() {
     const fetchPosts = async () => {
       setLoading(true)
       try {
-        const response = await getPosts(filter === 'all' ? undefined : filter, 'community')
-        // response from backend is Page<Publication>, so we need response.content
+        const response = await getPosts(filter === 'all' ? undefined : filter)
         const backendPosts = response.content || []
         
+        // Filter for community posts (non-professional)
+        const communityPosts = backendPosts.filter((pub: any) => pub.author?.role !== 'PROFESSIONAL' && pub.author?.role !== 'ADMIN');
+
         // Map Publication to Post
         const mappedPosts: Post[] = await Promise.all(
-          backendPosts.map(async (pub: any) => {
+          communityPosts.map(async (pub: any) => {
             let reportsCount = 0;
             try {
               const reports = await getPostReports(pub.id);

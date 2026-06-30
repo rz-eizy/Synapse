@@ -16,11 +16,13 @@ export function ModerationProfessionals() {
     const fetchPosts = async () => {
       setLoading(true)
       try {
-        const response = await getPosts(filter === 'all' ? undefined : filter, 'professional')
+        const response = await getPosts(filter === 'all' ? undefined : filter)
         const backendPosts = response.content || []
         
+        const professionalPosts = backendPosts.filter((pub: any) => pub.author?.role === 'PROFESSIONAL');
+
         const mappedPosts: Post[] = await Promise.all(
-          backendPosts.map(async (pub: any) => {
+          professionalPosts.map(async (pub: any) => {
             let reportsCount = 0;
             try {
               const reports = await getPostReports(pub.id);
