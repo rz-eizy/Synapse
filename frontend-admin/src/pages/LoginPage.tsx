@@ -1,6 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { login } from '../services/api';
 import styles from '../styles/pages/LoginPage.module.css';
+
+// ── 🧪 MODO TEST — pon esto en true para saltarte el login automáticamente ──
+// Recuerda volver a dejarlo en false antes de hacer commit / desplegar.
+const SKIP_LOGIN_FOR_TESTING = false;
 
 interface LoginPageProps {
   onLoginSuccess: () => void;
@@ -11,6 +15,13 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Si el flag está activo, entra directo sin pasar por el backend
+  useEffect(() => {
+    if (SKIP_LOGIN_FOR_TESTING) {
+      onLoginSuccess();
+    }
+  }, [onLoginSuccess]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,6 +77,24 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
             {loading ? 'Iniciando...' : 'Iniciar Sesión'}
           </button>
         </form>
+
+        {/* 🧪 Botón visible solo para testing manual, sin pasar por el backend */}
+        <button
+          type="button"
+          onClick={onLoginSuccess}
+          style={{
+            marginTop: '12px',
+            width: '100%',
+            background: 'transparent',
+            border: 'none',
+            color: '#9CA3AF',
+            fontSize: '12px',
+            cursor: 'pointer',
+            textDecoration: 'underline'
+          }}
+        >
+          Saltar login (solo testing frontend)
+        </button>
       </div>
     </div>
   );
