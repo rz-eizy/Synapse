@@ -1,9 +1,6 @@
 docker-compose.yml
-
 test.http
 .env
 target/
-*.json
-!package.json
-!package-lock.json
+
 secrets/
