@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.UUID;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -19,6 +20,7 @@ import synapse.api.exeption.UserNotFound;
 import synapse.api.model.Publication;
 import synapse.api.model.User;
 import synapse.api.model.enums.ModerationStatus;
+import synapse.api.model.event.PublicationImagePendingEvent;
 import synapse.api.repository.PublicationRepository;
 import synapse.api.repository.UserRepository;
 
@@ -27,10 +29,16 @@ import synapse.api.repository.UserRepository;
 public class PublicationService {
     private static final Clock clock = Clock.system(ZoneId.of("America/Santiago"));
     private static final String PROFESSIONAL_ROLE = "PROFESSIONAL";
+    private final ApplicationEventPublisher eventPublisher;
     private final PublicationRepository repository;
     private final UserRepository userRepository;
 
-    public PublicationService(PublicationRepository repository, UserRepository user){
+    public PublicationService(
+        ApplicationEventPublisher eventPublisher,
+        PublicationRepository repository, 
+        UserRepository user
+    ){
+        this.eventPublisher = eventPublisher;
         this.repository = repository;
         this.userRepository = user;
     }
@@ -53,16 +61,14 @@ public class PublicationService {
             }
             publication.setImageUrl(dto.getImageUrl());
             publication.setModerationStatus(ModerationStatus.PENDING);
+            Publication saved = repository.save(publication);
+
+            eventPublisher.publishEvent(new PublicationImagePendingEvent(saved.getId(), saved.getImageUrl()));
+            return saved;
         } else {
             publication.setModerationStatus(ModerationStatus.APPROVED);
+            return repository.save(publication);
         }
-        return repository.save(publication);
-    }
-
-    private void assertCanUploadPhoto(UUID userId){
-        User u = userRepository.findById(userId)
-                .orElseThrow(UserNotFound::new);
-        if (!PROFESSIONAL_ROLE.equalsIgnoreCase(u.getRole())) throw new PhotoUploadNotAllowedException();
     }
 
     public Page<Publication> getFilteredPublications(String regionTag, UUID authorId, Boolean hasPhoto,int page, int size){
