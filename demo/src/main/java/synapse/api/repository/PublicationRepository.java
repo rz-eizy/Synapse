@@ -6,9 +6,11 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import jakarta.transaction.Transactional;
 import synapse.api.model.Publication;
 import synapse.api.model.enums.ModerationStatus;
 import synapse.api.model.enums.ReportType;
@@ -40,4 +42,9 @@ public interface PublicationRepository extends JpaRepository<Publication, UUID>{
         @Param("type") ReportType type,
         Pageable pageable
     );
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE Publication p SET p.moderationStatus = :status WHERE p.id = :id")
+    void updateModerationStatus(@Param("id") UUID id, @Param("status") ModerationStatus status);
 }
