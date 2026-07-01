@@ -26,18 +26,24 @@ public class CustomUserDetails implements UserDetails {
     // Cambiar cuando se implementen rol de usuarios
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        String rolName = switch (user.getRole()) {
+        String rolName = switch (user.getRole().toLowerCase()) {
             case "professional" -> "PROFESSIONAL";
             case "admin" -> "ADMIN";
             default -> "USER";
         };
         return List.of(new SimpleGrantedAuthority("ROLE_" + rolName));
     }
+    
+    /* 
+        BANNED = bloqueado permanentemente
+        SUSPENDED = bloqueado hasta la fecha indicada
+    */
     @Override
-    public boolean isEnabled() {
+    public boolean isAccountNonLocked() {
         return switch (user.getAccountStatus()) {
             case BANNED -> false;
-            case SUSPENDED -> user.getSuspendedUntil() != null && LocalDateTime.now(clock).isAfter(user.getSuspendedUntil());
+            case SUSPENDED -> user.getSuspendedUntil() == null
+                    || LocalDateTime.now(clock).isAfter(user.getSuspendedUntil());
             case ACTIVE -> true;
         };
     }
@@ -60,7 +66,7 @@ public class CustomUserDetails implements UserDetails {
     @Override
     public boolean isAccountNonExpired() { return true;}
     @Override
-    public boolean isAccountNonLocked() { return true;}
-    @Override
     public boolean isCredentialsNonExpired() { return true;}
+    @Override
+    public boolean isEnabled() { return true; }
 }
