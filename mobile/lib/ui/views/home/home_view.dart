@@ -350,7 +350,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                                     const storage = FlutterSecureStorage();
                                     String? jwtToken =
                                         await storage.read(key: 'jwt_token');
-                                    const region = 'Araucanía';
+                                    final region = _userRegion ?? 'La Araucanía';
 
                                     if (jwtToken == null ||
                                         jwtToken.isEmpty) {

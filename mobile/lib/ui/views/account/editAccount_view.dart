@@ -22,7 +22,6 @@ class _EditAccountViewState extends State<EditAccountView>
   final ImagePicker _picker = ImagePicker();
 
   final _nameController = TextEditingController();
-  final _handleController = TextEditingController();
   final _bioController = TextEditingController();
   final _emailController = TextEditingController();
 
@@ -87,7 +86,6 @@ class _EditAccountViewState extends State<EditAccountView>
       if (profileData != null && mounted) {
         setState(() {
           _nameController.text = profileData['username'] ?? '';
-          _handleController.text = profileData['username'] ?? '';
           _isProfessional = profileData['role'] == 'professional';
         });
 
@@ -122,6 +120,18 @@ class _EditAccountViewState extends State<EditAccountView>
               }
             });
           }
+        } else {
+          setState(() {
+            if (profileData['region'] != null && _regions.contains(profileData['region'])) {
+              _selectedRegion = profileData['region'];
+            }
+            if (profileData['interestedDiagnostics'] != null) {
+              _selectedDiagnostics.clear();
+              _selectedDiagnostics.addAll(
+                profileData['interestedDiagnostics'].toString().split(',').map((e) => e.trim()).where((e) => e.isNotEmpty)
+              );
+            }
+          });
         }
       }
     } catch (e) {
@@ -136,7 +146,6 @@ class _EditAccountViewState extends State<EditAccountView>
   @override
   void dispose() {
     _nameController.dispose();
-    _handleController.dispose();
     _bioController.dispose();
     _emailController.dispose();
     _fadeController.dispose();
@@ -167,7 +176,7 @@ class _EditAccountViewState extends State<EditAccountView>
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final handle = _handleController.text.trim();
+    final name = _nameController.text.trim();
     setState(() => _isLoading = true);
 
     try {
@@ -201,7 +210,7 @@ class _EditAccountViewState extends State<EditAccountView>
       bool success;
       if (_isProfessional) {
         final data = {
-          'username': handle,
+          'username': name,
           'profilePicture': finalImageUrl,
           'description': _bioController.text,
           'yearsExperience': int.tryParse(_yearsController.text) ?? 0,
@@ -218,10 +227,13 @@ class _EditAccountViewState extends State<EditAccountView>
       } else {
         success = await _userApiService.updateProfile(
           token,
-          handle,
+          name,
           finalImageUrl,
-          "Araucanía",
+          _selectedRegion,
         );
+        if (success) {
+          await _userApiService.updateUserPreferences(token, _selectedRegion, _selectedDiagnostics.join(', '));
+        }
       }
 
       if (mounted) {
@@ -366,19 +378,7 @@ class _EditAccountViewState extends State<EditAccountView>
                       ),
                       const SizedBox(height: 18),
 
-                      _CustomInputField(
-                        label: 'Handle único',
-                        controller: _handleController,
-                        icon: Icons.alternate_email_rounded,
-                        prefixText: '@',
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Por favor ingresa un identificador';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 18),
+
 
                       _CustomInputField(
                         label: 'Correo electrónico',
@@ -403,6 +403,46 @@ class _EditAccountViewState extends State<EditAccountView>
                       ),
                       const SizedBox(height: 36),
 
+                      const Text('Ubicación y Preferencias', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary)),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<String>(
+                        value: _selectedRegion,
+                        decoration: InputDecoration(
+                          labelText: 'Región',
+                          prefixIcon: const Icon(Icons.map_rounded, color: AppColors.primary, size: 20),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+                          filled: true,
+                          fillColor: Colors.white,
+                        ),
+                        items: _regions.map((r) => DropdownMenuItem(value: r, child: Text(r))).toList(),
+                        onChanged: (val) => setState(() => _selectedRegion = val!),
+                      ),
+                      const SizedBox(height: 32),
+                      Text(_isProfessional ? 'Condiciones que atiende' : 'Condiciones de interés', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary)),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8.0,
+                        children: _availableDiagnostics.map((diag) {
+                          final isSelected = _selectedDiagnostics.contains(diag);
+                          return FilterChip(
+                            label: Text(diag),
+                            selected: isSelected,
+                            selectedColor: AppColors.primaryLight,
+                            checkmarkColor: AppColors.primary,
+                            onSelected: (bool selected) {
+                              setState(() {
+                                if (selected) {
+                                  _selectedDiagnostics.add(diag);
+                                } else {
+                                  _selectedDiagnostics.remove(diag);
+                                }
+                              });
+                            },
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 36),
+
                       if (_isProfessional) ...[
                         const Text('Información Profesional', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary)),
                         const SizedBox(height: 16),
@@ -420,21 +460,6 @@ class _EditAccountViewState extends State<EditAccountView>
                           icon: Icons.attach_money_rounded,
                           keyboardType: TextInputType.number,
                           validator: (val) => val == null || val.isEmpty ? 'Requerido' : null,
-                        ),
-                        const SizedBox(height: 32),
-                        const Text('Ubicación y Modalidad', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary)),
-                        const SizedBox(height: 16),
-                        DropdownButtonFormField<String>(
-                          value: _selectedRegion,
-                          decoration: InputDecoration(
-                            labelText: 'Región de trabajo',
-                            prefixIcon: const Icon(Icons.map_rounded, color: AppColors.primary, size: 20),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
-                            filled: true,
-                            fillColor: Colors.white,
-                          ),
-                          items: _regions.map((r) => DropdownMenuItem(value: r, child: Text(r))).toList(),
-                          onChanged: (val) => setState(() => _selectedRegion = val!),
                         ),
                         const SizedBox(height: 16),
                         _CustomInputField(
@@ -488,30 +513,6 @@ class _EditAccountViewState extends State<EditAccountView>
                                     _selectedHealthCoverages.add(cov);
                                   } else {
                                     _selectedHealthCoverages.remove(cov);
-                                  }
-                                });
-                              },
-                            );
-                          }).toList(),
-                        ),
-                        const SizedBox(height: 32),
-                        const Text('Condiciones que atiende', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary)),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 8.0,
-                          children: _availableDiagnostics.map((diag) {
-                            final isSelected = _selectedDiagnostics.contains(diag);
-                            return FilterChip(
-                              label: Text(diag),
-                              selected: isSelected,
-                              selectedColor: AppColors.primaryLight,
-                              checkmarkColor: AppColors.primary,
-                              onSelected: (bool selected) {
-                                setState(() {
-                                  if (selected) {
-                                    _selectedDiagnostics.add(diag);
-                                  } else {
-                                    _selectedDiagnostics.remove(diag);
                                   }
                                 });
                               },

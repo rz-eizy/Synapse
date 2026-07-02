@@ -42,7 +42,7 @@ public class PublicationService {
         
         Publication publication = new Publication();
         publication.setContent(dto.getContent());
-        publication.setRegionTag(dto.getRegionTag());
+        publication.setRegionTag(author.getRegion());
         publication.setCreatedAt(LocalDateTime.now(clock));
         publication.setAuthor(author);
 
