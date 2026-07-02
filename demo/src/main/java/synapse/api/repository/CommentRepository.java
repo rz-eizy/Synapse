@@ -5,9 +5,11 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import jakarta.transaction.Transactional;
 import synapse.api.model.Comment;
 import synapse.api.model.enums.ModerationStatus;
 import synapse.api.model.enums.ReportType;
@@ -32,4 +34,9 @@ public interface CommentRepository extends JpaRepository<Comment, UUID>{
         @Param("type") ReportType type,
         Pageable pageable
     );
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE Comment c SET c.moderationStatus = :status WHERE c.id = :id")
+    void updateModerationStatus(@Param("id") UUID id, @Param("status") ModerationStatus status);
 }
