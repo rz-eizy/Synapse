@@ -46,7 +46,7 @@ public class ProfessionalRequestController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @PatchMapping("/requests/{idRequest}/approve")
+    @PatchMapping("/{idRequest}/approve")
     public ResponseEntity<Professional> approveAndPromote(
         @PathVariable UUID idRequest,
         @RequestParam(value = "professionName") String professionName,
@@ -57,7 +57,7 @@ public class ProfessionalRequestController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @PatchMapping("/requests/{idRequest}/reject")
+    @PatchMapping("/{idRequest}/reject")
     public ResponseEntity<ProfessionalRequest> rejectRequest(
         @PathVariable UUID idRequest,
         @RequestParam(value = "notes", required = false) String adminNotes

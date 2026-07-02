@@ -79,3 +79,12 @@ export interface DashboardStats {
   totalReports: number
   approvalRate: number
 }
+
+export interface ProfessionalRequest {
+  id: string
+  user: User
+  verificationPictureUrl: string
+  status: 'PENDING' | 'APPROVED' | 'REJECTED'
+  createdAt: string
+  adminNotes?: string
+}

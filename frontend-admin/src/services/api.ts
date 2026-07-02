@@ -91,3 +91,19 @@ export async function getDashboardStats() {
   return fetchWithAuth(`/admin/dashboard/stats`);
 }
 
+// Professional Requests
+export async function getProfessionalRequests(page: number = 0, size: number = 20) {
+  return fetchWithAuth(`/professional/requests?page=${page}&size=${size}`);
+}
+
+export async function approveProfessionalRequest(id: string, professionName: string) {
+  return fetchWithAuth(`/professional/requests/${id}/approve?professionName=${encodeURIComponent(professionName)}`, {
+    method: 'PATCH',
+  });
+}
+
+export async function rejectProfessionalRequest(id: string, notes: string) {
+  return fetchWithAuth(`/professional/requests/${id}/reject?notes=${encodeURIComponent(notes)}`, {
+    method: 'PATCH',
+  });
+}
