@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { login } from '../services/api';
 import styles from '../styles/pages/LoginPage.module.css';
+import logo from '../assets/images/Appoyo_logo.png';
 
 interface LoginPageProps {
   onLoginSuccess: () => void;
@@ -30,8 +31,10 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
   return (
     <div className={styles.page}>
       <div className={styles.card}>
-        <h1 className={styles.title}>Synapse Admin</h1>
-        <p className={styles.subtitle}>Ingresa tus credenciales para acceder</p>
+        <div className={styles.logoWrap}>
+          <img src={logo} alt="Logo" className={styles.logo} />
+        </div>
+        <p className={styles.subtitle}>Bienvenido, Ingresa tus credenciales para continuar.</p>
 
         {error && <div className={styles.error}>{error}</div>}
 

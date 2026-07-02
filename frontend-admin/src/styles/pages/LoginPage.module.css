@@ -3,31 +3,71 @@
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background-color: #F9FAFB;
+  padding: 1.5rem;
+  background:
+    radial-gradient(circle at 15% 15%, #9a57ff , transparent 65%),
+    radial-gradient(circle at 85% 85%, rgb(246, 152, 255), transparent 65%),
+    linear-gradient(135deg, #F6F1FC 0%, #FBF0F7 100%);
 }
 
 .card {
-  background: white;
-  padding: 2.5rem;
-  border-radius: 12px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  position: relative;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  padding: 2.75rem 2.5rem;
+  border-radius: 20px;
+  border: 1px solid rgba(216, 191, 242, 0.4);
+  box-shadow:
+    0 20px 45px -15px rgba(176, 143, 224, 0.35),
+    0 8px 20px -10px rgba(212, 95, 168, 0.15);
   width: 100%;
   max-width: 400px;
+  overflow: hidden;
 }
 
-.title {
-  font-size: 1.5rem;
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(135deg, #9a57ff 0%, #ff06a083 100%);
+}
+
+/* --- Logo --- */
+.logoWrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.logo {
+  max-height: 85px;
+  width: auto;
+  object-fit: contain;
+}
+
+.logoPlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 96px;
+  height: 56px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #9a57ff 0%, #ea00ff96 100%);
+  color: #FFFFFF;
+  font-size: 0.75rem;
   font-weight: 700;
-  text-align: center;
-  margin-bottom: 0.5rem;
-  color: #111827;
+  letter-spacing: 0.08em;
 }
 
 .subtitle {
   text-align: center;
-  color: #6B7280;
+  color: #8676A1;
   font-size: 0.875rem;
-  margin-bottom: 2rem;
+  margin-bottom: 2.25rem;
 }
 
 .formGroup {
@@ -36,52 +76,78 @@
 
 .label {
   display: block;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #374151;
-  margin-bottom: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #3D2E4F;
+  margin-bottom: 0.4rem;
 }
 
 .input {
   width: 100%;
   padding: 0.75rem 1rem;
-  border: 1px solid #D1D5DB;
-  border-radius: 6px;
-  font-size: 1rem;
-  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  border: 1.5px solid #E8DEF7;
+  border-radius: 10px;
+  font-size: 0.9375rem;
+  color: #3D2E4F;
+  background: #FCFAFF;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out, background-color 0.15s ease-in-out;
+}
+
+.input::placeholder {
+  color: #B7A9CC;
 }
 
 .input:focus {
   outline: none;
-  border-color: #6366F1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+  border-color: #9a57ff;
+  background: #FFFFFF;
+  box-shadow: 0 0 0 4px rgba(212, 95, 168, 0.15);
+}
+
+.input:disabled {
+  background: #F3F0F8;
+  cursor: not-allowed;
 }
 
 .button {
   width: 100%;
-  padding: 0.75rem 1rem;
-  background-color: #6366F1;
+  padding: 0.8rem 1rem;
+  margin-top: 0.5rem;
+  background: linear-gradient(135deg, #9a57ff 0%, #ff06a083 100%);
   color: white;
   border: none;
-  border-radius: 6px;
-  font-size: 1rem;
+  border-radius: 10px;
+  font-size: 0.9375rem;
   font-weight: 600;
+  letter-spacing: 0.01em;
   cursor: pointer;
-  transition: background-color 0.15s ease-in-out;
+  box-shadow: 0 8px 18px -6px rgba(212, 95, 168, 0.45);
+  transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out, filter 0.15s ease-in-out;
 }
 
-.button:hover {
-  background-color: #4F46E5;
+.button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px -6px rgba(212, 95, 168, 0.55);
+  filter: brightness(1.05);
+}
+
+.button:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .button:disabled {
-  background-color: #9CA3AF;
+  background: #D9D2E3;
+  box-shadow: none;
   cursor: not-allowed;
 }
 
 .error {
-  color: #DC2626;
-  font-size: 0.875rem;
-  margin-bottom: 1rem;
+  color: #B23A6B;
+  background: #FCEBF3;
+  border: 1px solid #F3C9DF;
+  border-radius: 8px;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.8125rem;
+  margin-bottom: 1.1rem;
   text-align: center;
 }
