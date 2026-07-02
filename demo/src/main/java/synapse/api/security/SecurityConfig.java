@@ -45,8 +45,17 @@ public class SecurityConfig {
                     res.setStatus(401);
                     res.setContentType("application/json");
                     res.getWriter().write("{\"error\":\"Unauthorized: \"" + e.getMessage() + "\"}");
-                } 
-            )) 
+                })
+                .accessDeniedHandler((req, res, e) -> {
+                    res.setStatus(403);
+                    res.setContentType("application/json;charset=UTF-8");
+                    if (req.getRequestURI().contains("/api/professional/requests")) {
+                        res.getWriter().write("{\"error\":\"Un administrador debe ser un miembro imparcial de la comunidad.\"}");
+                    } else {
+                        res.getWriter().write("{\"error\":\"Acceso denegado.\"}");
+                    }
+                })
+            )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }

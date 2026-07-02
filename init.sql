@@ -90,6 +90,18 @@ CREATE TABLE IF NOT EXISTS reports (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS professional_requests (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    profession_name VARCHAR(255),
+    current_work VARCHAR(255),
+    verification_picture TEXT NOT NULL,
+    cost_work INTEGER,
+    status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    admin_notes TEXT
+);
+
 -- Para probar que se autentique, la clave de cada usuario es: admin
 INSERT INTO users (full_name, email, password_hash, role, region)
 VALUES ('Eloy Prado', 'e.prado02@ufromail.cl', '$2a$10$erhFX6pgiS7js5qzIwuypOU3yRvmBbRkS.WfuExXuhlF5KExVxtoC', 'admin', 'Araucanía');

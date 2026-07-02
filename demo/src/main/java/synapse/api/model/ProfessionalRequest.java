@@ -22,17 +22,17 @@ public class ProfessionalRequest {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(name = "profession_name" ,nullable = false)
+    @Column(name = "profession_name")
     private String professionName;
 
-    @Column(name = "current_work", nullable = false)
+    @Column(name = "current_work")
     private String currentWork;
 
     @Column(name = "verification_picture", nullable = false)
     private String verificationPictureUrl;
 
-    @Column(name = "cost_work", nullable = false)
-    private int costWork;
+    @Column(name = "cost_work")
+    private Integer costWork;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)

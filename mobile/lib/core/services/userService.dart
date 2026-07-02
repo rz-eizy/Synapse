@@ -51,4 +51,32 @@ class UserApiService{
       return false;
     }
   }
+
+  Future<String?> requestProfessionalUpgrade(String token, String imageUrl) async {
+    try {
+      final uri = Uri.parse('${ApiConfig.baseUrl}/professional/requests').replace(queryParameters: {
+        'imageUrl': imageUrl
+      });
+      final response = await http.post(
+        uri,
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return null;
+      } else {
+        print('Error backend status: ${response.statusCode}, body: ${response.body}');
+        try {
+          final body = jsonDecode(response.body);
+          return body['error'] ?? 'Error desconocido al solicitar ascenso';
+        } catch (_) {
+          return 'Error desconocido al solicitar ascenso';
+        }
+      }
+    } catch (e) {
+      print('Error al solicitar ascenso a profesional (Excepción): $e');
+      return 'Error de conexión';
+    }
+  }
 }

@@ -38,11 +38,10 @@ public class ProfessionalRequestController {
     @PreAuthorize("hasRole('USER')") 
     @PostMapping()
     public ResponseEntity<ProfessionalRequest> submitRequest(
-            @RequestBody ProfessionalRequestDTO dto,
             @RequestParam String imageUrl,
             @AuthenticationPrincipal CustomUserDetails principal
     ) {
-        ProfessionalRequest newRequest = requestService.createRequest(principal.getId(), dto, imageUrl);
+        ProfessionalRequest newRequest = requestService.createRequest(principal.getId(), imageUrl);
         return new ResponseEntity<>(newRequest, HttpStatus.CREATED);
     }
 
@@ -50,9 +49,10 @@ public class ProfessionalRequestController {
     @PatchMapping("/requests/{idRequest}/approve")
     public ResponseEntity<Professional> approveAndPromote(
         @PathVariable UUID idRequest,
+        @RequestParam(value = "professionName") String professionName,
         @RequestParam(value = "notes", required = false) String adminNotes
     ){
-        Professional professionalProfile = requestService.approveRequestAndPromoteUser(idRequest, adminNotes);
+        Professional professionalProfile = requestService.approveRequestAndPromoteUser(idRequest, professionName, adminNotes);
         return ResponseEntity.ok(professionalProfile);
     }
 

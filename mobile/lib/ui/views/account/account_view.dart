@@ -4,6 +4,7 @@ import '../../widgets/comments_sheet.dart';
 import 'editAccount_view.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../core/services/userService.dart';
+import '../../widgets/upgrade_professional_dialog.dart';
 
 class _PostPreview {
   final String? imageUrl;
@@ -369,6 +370,39 @@ class _ProfileHeader extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                elevation: 0,
+                textStyle: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => const UpgradeProfessionalDialog(),
+                );
+              },
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.workspace_premium_rounded, size: 18),
+                  SizedBox(width: 8),
+                  Text('Ascender a profesional'),
+                ],
+              ),
+            ),
           ),
         ],
       ),

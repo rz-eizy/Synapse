@@ -41,7 +41,7 @@ public class ProfessionalRequestService {
     }
 
     @Transactional
-    public ProfessionalRequest createRequest(UUID userId, ProfessionalRequestDTO dto, String imageUrl) {
+    public ProfessionalRequest createRequest(UUID userId, String imageUrl) {
         User u = userRepository.findById(userId)
                 .orElseThrow(UserNotFound::new);
         if (requestRepository.existsByUserIdAndStatus(userId, RequestStatus.PENDING)) {
@@ -55,11 +55,8 @@ public class ProfessionalRequestService {
 
         ProfessionalRequest request = new ProfessionalRequest();
         request.setUser(u);
-        request.setCostWork(dto.getCostWork());
         request.setVerificationPictureUrl(imageUrl);
-        request.setCurrentWork(dto.getCurrentWork());
         request.setCreatedAt(LocalDateTime.now(clock)); 
-        request.setProfessionName(dto.getProfessionName());
         return requestRepository.save(request);
     }
 
@@ -82,7 +79,7 @@ public class ProfessionalRequestService {
     }
 
     @Transactional
-    public Professional approveRequestAndPromoteUser(UUID idRequest, String adminNotes) {
+    public Professional approveRequestAndPromoteUser(UUID idRequest, String professionName, String adminNotes) {
         ProfessionalRequest request = requestRepository.findById(idRequest)
                     .orElseThrow(() -> new RuntimeException("Solicitud no encontrada"));
         
@@ -92,14 +89,16 @@ public class ProfessionalRequestService {
 
         request.setStatus(RequestStatus.APPROVED);
         request.setAdminNotes(adminNotes);
+        // Save the profession name to the request for historical record if desired
+        request.setProfessionName(professionName);
         
         User user = request.getUser();            
         user.setRole("professional"); 
         
         Professional prof = new Professional();
-        prof.setProfessionName(request.getProfessionName());
-        prof.setCurrentWork(request.getCurrentWork()); 
-        prof.setCostWork(request.getCostWork());
+        prof.setProfessionName(professionName);
+        prof.setCurrentWork(""); // default empty value for required DB column
+        prof.setCostWork(0);
         prof.setUser(user); 
         
         user.setProfessional(prof);

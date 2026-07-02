@@ -5,6 +5,7 @@ import '../../../core/services/publicationService.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import '../../widgets/upgrade_professional_dialog.dart';
 
 class EditAccountView extends StatefulWidget {
   const EditAccountView({super.key});
@@ -316,9 +317,14 @@ class _EditAccountViewState extends State<EditAccountView>
                       const SizedBox(height: 36),
 
                       GestureDetector(
-                        onTap: () {},
+                        onTap: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) => const UpgradeProfessionalDialog(),
+                          );
+                        },
                         child: const Text(
-                          'Cambiar a cuenta de profesional',
+                          'Ascender a profesional',
                           style: TextStyle(
                             color: AppColors.primary,
                             fontSize: 15,
