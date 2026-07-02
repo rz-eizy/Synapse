@@ -160,6 +160,60 @@ class _EditAccountViewState extends State<EditAccountView>
     }
   }
 
+  Future<void> _deleteProfile() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Eliminar Perfil'),
+        content: const Text('¿Estás seguro que deseas eliminar tu perfil? Esta acción no se puede deshacer.'),
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar', style: TextStyle(color: AppColors.textSecondary)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      setState(() => _isLoading = true);
+      try {
+        final token = await _storage.read(key: 'jwt_token') ?? '';
+        if (token.isEmpty) {
+            setState(() => _isLoading = false);
+            return;
+        }
+
+        bool success = await _userApiService.deleteProfile(token);
+        if (mounted) {
+          if (success) {
+            await _storage.delete(key: 'jwt_token');
+            Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Error al eliminar el perfil')),
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e')),
+          );
+        }
+      } finally {
+        if (mounted) setState(() => _isLoading = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -279,6 +333,28 @@ class _EditAccountViewState extends State<EditAccountView>
                       _SubmitButton(
                         isLoading: _isLoading,
                         onPressed: _save,
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 52,
+                        child: TextButton(
+                          onPressed: _isLoading ? null : _deleteProfile,
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.red,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(26),
+                              side: const BorderSide(color: Colors.red),
+                            ),
+                          ),
+                          child: const Text(
+                            'Eliminar Perfil',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),

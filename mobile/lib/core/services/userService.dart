@@ -36,4 +36,19 @@ class UserApiService{
       return false;
     }
   }
+
+  Future<bool> deleteProfile(String token) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('${ApiConfig.baseUrl}/user/me'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+      return response.statusCode == 204 || response.statusCode == 200;
+    } catch (e) {
+      print('Error al eliminar perfil: $e');
+      return false;
+    }
+  }
 }
