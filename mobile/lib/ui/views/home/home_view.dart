@@ -40,6 +40,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   int _selectedTab = 0;
   int _selectedNav = 0;
   bool _isProfessional = false;
+  String? _userRegion;
 
   final _comunidadListKey = GlobalKey<_PublicationListState>();
 
@@ -80,6 +81,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     if (profileData != null && mounted) {
       setState(() {
         _isProfessional = profileData['role'] == 'professional'; 
+        _userRegion = profileData['region'];
       });
 
       if (_isProfessional && profileData['professionalOnboarded'] == false) {
@@ -706,11 +708,12 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
               ),
               Expanded(
                 child: _selectedTab == 0
-                    ? _PublicationList(firstCardKey: _keyFirstCard, hasPhoto: true)
+                    ? _PublicationList(firstCardKey: _keyFirstCard, hasPhoto: true, region: _userRegion)
                     : _PublicationList(
                         key: _comunidadListKey,
                         firstCardKey: _keyFirstCard,
                         hasPhoto: false,
+                        region: _userRegion,
                       ),
               ),
             ],
@@ -1053,7 +1056,8 @@ class _Tab extends StatelessWidget {
 class _PublicationList extends StatefulWidget {
   final GlobalKey? firstCardKey;
   final bool hasPhoto;
-  const _PublicationList({super.key, this.firstCardKey, required this.hasPhoto});
+  final String? region;
+  const _PublicationList({super.key, this.firstCardKey, required this.hasPhoto, this.region});
 
   @override
   State<_PublicationList> createState() => _PublicationListState();
@@ -1063,12 +1067,19 @@ class _PublicationListState extends State<_PublicationList> {
   final PublicationApiService _apiService = PublicationApiService();
   final _storage = const FlutterSecureStorage();
   late Future<List<PublicationModel>> _futurePublications;
-  final String _region = 'Araucanía';
 
   @override
   void initState() {
     super.initState();
     _refreshPublications();
+  }
+
+  @override
+  void didUpdateWidget(covariant _PublicationList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.region != widget.region) {
+      _refreshPublications();
+    }
   }
 
   void _refreshPublications() {
@@ -1083,7 +1094,8 @@ class _PublicationListState extends State<_PublicationList> {
       throw Exception(
           'Sesión expirada o no autenticado. Inicie sesión nuevamente.');
     }
-    return _apiService.fetchPublications(token, _region, hasPhoto: widget.hasPhoto);
+    final targetRegion = widget.region ?? 'La Araucanía';
+    return _apiService.fetchPublications(token, targetRegion, hasPhoto: widget.hasPhoto);
   }
 
   @override
