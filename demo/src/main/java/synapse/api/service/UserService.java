@@ -28,12 +28,14 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final PublicationRepository publicationRepository;
+    private final MailService mailService;
     private static final Clock clock = Clock.system(ZoneId.of("America/Santiago"));
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder,PublicationRepository publicationRepository){
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, PublicationRepository publicationRepository, MailService mailService){
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.publicationRepository = publicationRepository;
+        this.mailService = mailService;
     }
 
     @Transactional
@@ -116,5 +118,37 @@ public class UserService {
                 .orElseThrow(UserNotFound::new);
         u.setDeletedAt(LocalDateTime.now(clock));
         userRepository.save(u);
+    }
+
+    @Transactional
+    public void requestPasswordReset(String email) {
+        User u = userRepository.findByEmail(email).orElse(null);
+        if (u == null) return; // Silent return to prevent email enumeration
+        
+        String otp = String.format("%06d", new java.util.Random().nextInt(999999));
+        u.setResetOtpCode(otp);
+        u.setResetOtpExpiration(LocalDateTime.now(clock).plusMinutes(15));
+        
+        mailService.sendPasswordResetOtp(u.getEmail(), otp);
+    }
+
+    @Transactional
+    public boolean confirmPasswordReset(String email, String otp, String newPassword) {
+        User u = userRepository.findByEmail(email).orElse(null);
+        if (u == null) return false;
+        
+        if (u.getResetOtpCode() == null || !u.getResetOtpCode().equals(otp)) {
+            return false;
+        }
+        
+        if (u.getResetOtpExpiration() == null || u.getResetOtpExpiration().isBefore(LocalDateTime.now(clock))) {
+            return false; // OTP expired
+        }
+        
+        u.setPassword(passwordEncoder.encode(newPassword));
+        u.setResetOtpCode(null);
+        u.setResetOtpExpiration(null);
+        
+        return true;
     }
 }

@@ -76,6 +76,12 @@ public class User {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    @Column(name = "reset_otp_code", length = 6)
+    private String resetOtpCode;
+
+    @Column(name = "reset_otp_expiration")
+    private LocalDateTime resetOtpExpiration;
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "favorites",

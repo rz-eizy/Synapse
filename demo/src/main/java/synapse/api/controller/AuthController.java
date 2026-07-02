@@ -36,4 +36,28 @@ public class AuthController {
     public ResponseEntity<AuthResponseDTO> login(@Valid @RequestBody LoginRequestDTO requestDTO) {
         return ResponseEntity.ok(authService.login(requestDTO));
     }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Void> forgotPassword(@RequestBody java.util.Map<String, String> body) {
+        String email = body.get("email");
+        if (email != null && !email.isBlank()) {
+            userService.requestPasswordReset(email);
+        }
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Void> resetPassword(@RequestBody java.util.Map<String, String> body) {
+        String email = body.get("email");
+        String code = body.get("code");
+        String newPassword = body.get("newPassword");
+        
+        if (email != null && code != null && newPassword != null) {
+            boolean success = userService.confirmPasswordReset(email, code, newPassword);
+            if (success) {
+                return ResponseEntity.ok().build();
+            }
+        }
+        return ResponseEntity.badRequest().build();
+    }
 }

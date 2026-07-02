@@ -20,7 +20,9 @@ CREATE TABLE IF NOT EXISTS users (
     region VARCHAR(100), -- RF-12 [cite: 17]
     is_blocked BOOLEAN DEFAULT FALSE, -- RF-11 [cite: 16]
     deleted_at TIMESTAMP WITH TIME ZONE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    reset_otp_code VARCHAR(6),
+    reset_otp_expiration TIMESTAMP WITH TIME ZONE
 );
 
 CREATE TABLE IF NOT EXISTS user_sensitive_data (
