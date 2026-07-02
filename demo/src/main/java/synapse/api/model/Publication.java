@@ -53,7 +53,7 @@ public class Publication {
     @Column(name = "likes")
     private int likes;
 
-    @org.hibernate.annotations.Formula("(SELECT COUNT(c.comment_id) FROM comments c WHERE c.post_id = post_id)")
+    @org.hibernate.annotations.Formula("(SELECT COUNT(c.comment_id) FROM comments c JOIN users u ON c.author_id = u.user_id WHERE c.post_id = post_id AND u.deleted_at IS NULL)")
     private Integer commentsCount;
 
     @Enumerated(EnumType.STRING)
