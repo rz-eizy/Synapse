@@ -19,4 +19,6 @@ public class UserProfileDTO {
     private List<Publication> publications = new ArrayList<>();
     private List<String> favoriteProfessionalIds = new ArrayList<>();
     private String role;
+    private String rejectedRequestId;
+    private String rejectedRequestMotive;
 }

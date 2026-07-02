@@ -78,6 +78,52 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       setState(() {
         _isProfessional = profileData['role'] == 'professional'; 
       });
+
+      if (profileData['rejectedRequestId'] != null) {
+        final reqId = profileData['rejectedRequestId'];
+        final motive = profileData['rejectedRequestMotive'] ?? 'No cumple con los requisitos.';
+        final key = 'seen_rejection_$reqId';
+        final hasSeen = await storage.read(key: key);
+        if (hasSeen == null && mounted) {
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (ctx) => AlertDialog(
+              backgroundColor: Colors.white,
+              surfaceTintColor: Colors.transparent,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              title: const Row(
+                children: [
+                  Icon(Icons.error_outline, color: AppColors.error, size: 28),
+                  SizedBox(width: 8),
+                  Text('Solicitud Rechazada', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                ],
+              ),
+              content: Text(
+                'Tu solicitud para ascender a Profesional ha sido rechazada por el siguiente motivo:\n\n"$motive"\n\nPuedes volver a enviar tu solicitud cuando corrijas este problema.',
+                style: const TextStyle(color: AppColors.textPrimary, fontSize: 15, height: 1.4),
+              ),
+              actions: [
+                TextButton(
+                  style: TextButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  onPressed: () async {
+                    await storage.write(key: key, value: 'true');
+                    if (ctx.mounted) Navigator.pop(ctx);
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+                    child: Text('Aceptar', style: TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+      }
     }
   }
 

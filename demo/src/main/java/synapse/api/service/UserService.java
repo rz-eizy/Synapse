@@ -20,6 +20,7 @@ import synapse.api.exeption.UserNotFound;
 import synapse.api.exeption.UsernameAlreadyExistsException;
 import synapse.api.model.User;
 import synapse.api.model.enums.ModerationStatus;
+import synapse.api.repository.ProfessionalRequestRepository;
 import synapse.api.repository.PublicationRepository;
 import synapse.api.repository.UserRepository;
 
@@ -28,13 +29,15 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final PublicationRepository publicationRepository;
+    private final ProfessionalRequestRepository professionalRequestRepository;
     private final MailService mailService;
     private static final Clock clock = Clock.system(ZoneId.of("America/Santiago"));
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, PublicationRepository publicationRepository, MailService mailService){
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, PublicationRepository publicationRepository, ProfessionalRequestRepository professionalRequestRepository, MailService mailService){
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.publicationRepository = publicationRepository;
+        this.professionalRequestRepository = professionalRequestRepository;
         this.mailService = mailService;
     }
 
@@ -71,6 +74,12 @@ public class UserService {
             favIds.add(fav.getId().toString());
         }
         uProfile.setFavoriteProfessionalIds(favIds);
+
+        synapse.api.model.ProfessionalRequest rejectedReq = professionalRequestRepository.findFirstByUserIdAndStatusOrderByCreatedAtDesc(idUser, synapse.api.model.enums.RequestStatus.REJECTED);
+        if (rejectedReq != null) {
+            uProfile.setRejectedRequestId(rejectedReq.getId().toString());
+            uProfile.setRejectedRequestMotive(rejectedReq.getAdminNotes());
+        }
 
         return uProfile;
     }

@@ -17,4 +17,6 @@ public interface ProfessionalRequestRepository extends JpaRepository<Professiona
     boolean existsByUserIdAndStatus(UUID userId, RequestStatus status);
 
     Page<ProfessionalRequest> findAllByStatus(RequestStatus status, Pageable pageable);
+
+    ProfessionalRequest findFirstByUserIdAndStatusOrderByCreatedAtDesc(UUID userId, RequestStatus status);
 }
