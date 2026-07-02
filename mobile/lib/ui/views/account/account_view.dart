@@ -39,6 +39,7 @@ class _AccountViewState extends State<AccountView>
 
   late final AnimationController _fadeController;
   late final Animation<double> _fadeAnimation;
+  bool _isProfessional = false;
 
   @override
   void initState() {
@@ -67,6 +68,7 @@ class _AccountViewState extends State<AccountView>
       setState(() {
         _username = profileData['username'] ?? 'Usuario';
         _profileImageUrl = profileData['profilePictureUrl'] ?? '';
+        _isProfessional = profileData['role'] == 'professional';
 
         _userPosts = publicationsJson
             .map(
@@ -142,6 +144,7 @@ class _AccountViewState extends State<AccountView>
                       username: _username,
                       profileImageUrl: _profileImageUrl,
                       postCount: _userPosts.length,
+                      isProfessional: _isProfessional,
                     ),
                   ),
                   // Indicador de feed premium estilo Tab
@@ -215,11 +218,13 @@ class _ProfileHeader extends StatelessWidget {
   final String username;
   final String profileImageUrl;
   final int postCount;
+  final bool isProfessional;
 
   const _ProfileHeader({
     required this.username,
     required this.profileImageUrl,
     required this.postCount,
+    required this.isProfessional,
   });
 
   @override
@@ -371,39 +376,41 @@ class _ProfileHeader extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            height: 48,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+          if (!isProfessional) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  elevation: 0,
+                  textStyle: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-                elevation: 0,
-                textStyle: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => const UpgradeProfessionalDialog(),
+                  );
+                },
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.workspace_premium_rounded, size: 18),
+                    SizedBox(width: 8),
+                    Text('Ascender a profesional'),
+                  ],
                 ),
-              ),
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (context) => const UpgradeProfessionalDialog(),
-                );
-              },
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.workspace_premium_rounded, size: 18),
-                  SizedBox(width: 8),
-                  Text('Ascender a profesional'),
-                ],
               ),
             ),
-          ),
+          ],
         ],
       ),
     );

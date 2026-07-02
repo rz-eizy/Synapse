@@ -33,6 +33,8 @@ class _EditAccountViewState extends State<EditAccountView>
   late final AnimationController _fadeController;
   late final Animation<double> _fadeAnimation;
 
+  bool _isProfessional = false;
+
   @override
   void initState() {
     super.initState();
@@ -59,6 +61,7 @@ class _EditAccountViewState extends State<EditAccountView>
         setState(() {
           _nameController.text = profileData['username'] ?? '';
           _handleController.text = profileData['username'] ?? '';
+          _isProfessional = profileData['role'] == 'professional';
         });
       }
     } catch (e) {
@@ -316,25 +319,27 @@ class _EditAccountViewState extends State<EditAccountView>
                       ),
                       const SizedBox(height: 36),
 
-                      GestureDetector(
-                        onTap: () {
-                          showDialog(
-                            context: context,
-                            builder: (context) => const UpgradeProfessionalDialog(),
-                          );
-                        },
-                        child: const Text(
-                          'Ascender a profesional',
-                          style: TextStyle(
-                            color: AppColors.primary,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            decoration: TextDecoration.underline,
-                            decorationColor: AppColors.primary,
+                      if (!_isProfessional) ...[
+                        GestureDetector(
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => const UpgradeProfessionalDialog(),
+                            );
+                          },
+                          child: const Text(
+                            'Ascender a profesional',
+                            style: TextStyle(
+                              color: AppColors.primary,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              decoration: TextDecoration.underline,
+                              decorationColor: AppColors.primary,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 32),
+                        const SizedBox(height: 32),
+                      ],
 
                       _SubmitButton(
                         isLoading: _isLoading,
