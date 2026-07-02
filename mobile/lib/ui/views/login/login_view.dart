@@ -4,6 +4,7 @@ import '../../../core/theme/app_colors.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../../../core/services/authService.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -21,6 +22,7 @@ class _LoginViewState extends State<LoginView> with SingleTickerProviderStateMix
   final TextEditingController _passwordController = TextEditingController();
 
   final _storage = const FlutterSecureStorage();
+  final _authApiService = AuthApiService();
 
   @override
   void initState() {
@@ -104,6 +106,127 @@ class _LoginViewState extends State<LoginView> with SingleTickerProviderStateMix
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  Future<void> _showForgotPasswordDialog() async {
+    final emailCtrl = TextEditingController();
+    bool isLoading = false;
+
+    await showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: const Text('Recuperar contraseña', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Ingresa tu correo electrónico y te enviaremos un código de 6 dígitos.', style: TextStyle(color: Color(0xFF6B6687), fontSize: 14)),
+              const SizedBox(height: 20),
+              _SleekTextField(
+                hintText: 'Correo Electrónico',
+                controller: emailCtrl,
+                prefixIcon: Icons.mail_outline_rounded,
+                activeColor: AppColors.primary,
+                keyboardType: TextInputType.emailAddress,
+              ),
+              const SizedBox(height: 16),
+              Align(
+                alignment: Alignment.centerRight,
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showVerificationCodeDialog(emailCtrl.text); 
+                  },
+                  child: const Text('Ya tengo un código', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600, fontSize: 13)),
+                ),
+              )
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: isLoading ? null : () => Navigator.pop(context),
+              child: const Text('Cancelar', style: TextStyle(color: AppColors.textSecondary)),
+            ),
+            ElevatedButton(
+              onPressed: isLoading ? null : () async {
+                final email = emailCtrl.text.trim();
+                if (email.isEmpty) return;
+                setState(() => isLoading = true);
+                final success = await _authApiService.requestPasswordReset(email);
+                setState(() => isLoading = false);
+                if (success && mounted) {
+                  Navigator.pop(context);
+                  _showVerificationCodeDialog(email);
+                } else if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error enviando código. Verifica tu correo.')));
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+              child: isLoading ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) : const Text('Enviar código'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showVerificationCodeDialog(String initialEmail) async {
+    final codeCtrl = TextEditingController();
+    
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: const Text('Código de Verificación', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Ingresa el código que hemos enviado a tu correo.', style: TextStyle(color: Color(0xFF6B6687), fontSize: 14)),
+            const SizedBox(height: 20),
+            _SleekTextField(
+              hintText: 'Código de 6 dígitos',
+              controller: codeCtrl,
+              prefixIcon: Icons.lock_outline_rounded,
+              activeColor: AppColors.primary,
+              keyboardType: TextInputType.number,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar', style: TextStyle(color: AppColors.textSecondary)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final code = codeCtrl.text.trim();
+              if (code.isNotEmpty) {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/change_password', arguments: {
+                  'email': initialEmail,
+                  'code': code,
+                });
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            ),
+            child: const Text('Restablecer'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -209,7 +332,7 @@ class _LoginViewState extends State<LoginView> with SingleTickerProviderStateMix
                           Align(
                             alignment: Alignment.centerRight,
                             child: GestureDetector(
-                              onTap: () {}, 
+                              onTap: _showForgotPasswordDialog, 
                               child: const Text(
                                 '¿Olvidaste tu contraseña?',
                                 style: TextStyle(
