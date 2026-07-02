@@ -13,6 +13,9 @@ class _Professional {
   final String experience;
   final String institution;
   final List<String> modalities;
+  final String city;
+  final String businessHours;
+  final String description;
 
   const _Professional({
     required this.id,
@@ -23,18 +26,30 @@ class _Professional {
     required this.experience,
     required this.institution,
     this.modalities = const [],
+    this.city = '',
+    this.businessHours = '',
+    this.description = '',
   });
 
   factory _Professional.fromJson(Map<String, dynamic> json) {
+    int years = json['yearsExperience'] ?? 0;
+    String mod = json['modality'] ?? '';
+    List<String> parsedModalities = mod.isNotEmpty 
+        ? mod.split(',').map((e) => e.trim()).toList()
+        : [];
+    
     return _Professional(
       id: json['professionalId'] ?? '',
       name: json['username'] ?? 'Desconocido',
       handle: '@${json['professionName'] ?? 'Profesional'}',
       imageUrl: json['profilePictureUrl'] ?? '',
       rating: (json['averageStars'] ?? 0.0).toDouble(),
-      experience: json['currentWork'] ?? '',
-      institution: 'Institución',
-      modalities: ['Presencial', 'Remoto'],
+      experience: years > 0 ? '$years años de experiencia' : 'Sin experiencia registrada',
+      institution: json['institutions'] ?? 'Institución no especificada',
+      modalities: parsedModalities,
+      city: json['city'] ?? '',
+      businessHours: json['businessHours'] ?? '',
+      description: json['professionalDescription'] ?? 'Sin descripción profesional',
     );
   }
 }
@@ -130,21 +145,21 @@ class _ProfessionalsViewState extends State<ProfessionalsView>
   }
 
   void _openProfile(_Professional p) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => _ProfessionalProfileSheet(
-        professional: p,
-        isFavorite: _favorites.contains(p.id),
-        onToggleFavorite: () => _toggleFavorite(p),
-        onRate: (stars) async {
-          final token = await _storage.read(key: 'jwt_token') ?? '';
-          final success = await _apiService.rateProfessional(token, p.id, stars);
-          if (success) {
-            _loadProfessionals();
-          }
-        },
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ProfessionalDetailView(
+          professional: p,
+          isFavorite: _favorites.contains(p.id),
+          onToggleFavorite: () => _toggleFavorite(p),
+          onRate: (stars) async {
+            final token = await _storage.read(key: 'jwt_token') ?? '';
+            final success = await _apiService.rateProfessional(token, p.id, stars);
+            if (success) {
+              _loadProfessionals();
+            }
+          },
+        ),
       ),
     );
   }
@@ -267,19 +282,26 @@ class _ProfessionalsViewState extends State<ProfessionalsView>
                         ],
                       ),
                     )
-                  : ListView.builder(
+                  : ListView.separated(
                       padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
                       itemCount: list.length,
+                      separatorBuilder: (_, __) => Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 16.0),
+                        child: Container(
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE8E8EE), // Color gris claro
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                      ),
                       itemBuilder: (_, i) {
                         final p = list[i];
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: _ProfessionalListItem(
-                            professional: p,
-                            isFavorite: _favorites.contains(p.id),
-                            onToggleFavorite: () => _toggleFavorite(p),
-                            onViewProfile: () => _openProfile(p),
-                          ),
+                        return _ProfessionalListItem(
+                          professional: p,
+                          isFavorite: _favorites.contains(p.id),
+                          onToggleFavorite: () => _toggleFavorite(p),
+                          onViewProfile: () => _openProfile(p),
                         );
                       },
                     ),
@@ -362,238 +384,187 @@ class _ProfessionalListItemState extends State<_ProfessionalListItem> {
     final p = widget.professional;
 
     return AnimatedScale(
-      scale: _isPressed ? 0.99 : 1.0,
+      scale: _isPressed ? 0.98 : 1.0,
       duration: const Duration(milliseconds: 100),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: const Color(0xFFF1EEFA), width: 1),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.015),
-              blurRadius: 14,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: InkWell(
-          onTap: widget.onViewProfile,
-          onTapDown: (_) => setState(() => _isPressed = true),
-          onTapUp: (_) => setState(() => _isPressed = false),
-          onTapCancel: () => setState(() => _isPressed = false),
-          borderRadius: BorderRadius.circular(22),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header: Avatar, Info y Badge de Calificación
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: AppColors.primary.withOpacity(0.12),
-                          width: 2,
-                        ),
-                      ),
-                      child: CircleAvatar(
-                        radius: 24,
-                        backgroundColor: AppColors.primaryLight,
-                        backgroundImage: p.imageUrl.isNotEmpty
-                            ? NetworkImage(p.imageUrl)
-                            : null,
-                        child: p.imageUrl.isEmpty
-                            ? Text(
-                                p.name.isNotEmpty ? p.name[0] : '?',
+      child: GestureDetector(
+        onTap: widget.onViewProfile,
+        onTapDown: (_) => setState(() => _isPressed = true),
+        onTapUp: (_) => setState(() => _isPressed = false),
+        onTapCancel: () => setState(() => _isPressed = false),
+        child: Container(
+          color: Colors.transparent, // Fondo transparente para usar divider afuera o sin borde
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CircleAvatar(
+                    radius: 26,
+                    backgroundColor: AppColors.primaryLight,
+                    backgroundImage: p.imageUrl.isNotEmpty ? NetworkImage(p.imageUrl) : null,
+                    child: p.imageUrl.isEmpty
+                        ? Text(
+                            p.name.isNotEmpty ? p.name[0] : '?',
+                            style: const TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 18,
+                            ),
+                          )
+                        : null,
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                p.name,
                                 style: const TextStyle(
-                                  color: AppColors.primary,
                                   fontWeight: FontWeight.w700,
                                   fontSize: 16,
+                                  color: AppColors.textPrimary,
                                 ),
-                              )
-                            : null,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            p.name,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 15,
-                              color: AppColors.textPrimary,
-                              letterSpacing: -0.2,
-                            ),
-                          ),
-                          const SizedBox(height: 1),
-                          Text(
-                            p.handle,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Rating Pill
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFF8E7),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.star_rounded,
-                            size: 14,
-                            color: Color(0xFFFFC940),
-                          ),
-                          const SizedBox(width: 3),
-                          Text(
-                            p.rating.toStringAsFixed(1),
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF8A6800),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-
-                // Institución y Experiencia
-                Text(
-                  '${p.experience} · ${p.institution}',
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textSecondary,
-                    height: 1.4,
-                  ),
-                ),
-                const SizedBox(height: 14),
-
-                Divider(color: AppColors.divider.withOpacity(0.3), height: 1),
-                const SizedBox(height: 12),
-
-                // Fila Inferior con Bloques Alineados Estáticamente
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Bloque Izquierdo: Iconos de Modalidad Representativos
-                    if (p.modalities.isNotEmpty)
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: p.modalities.map((m) {
-                          final bool isRemote = m.toLowerCase() == 'remoto';
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 6),
-                            child: Tooltip(
-                              message: m,
-                              child: Container(
-                                width: 34,
-                                height: 34,
-                                decoration: BoxDecoration(
-                                  color: isRemote
-                                      ? const Color(0xFFE3F2FD)
-                                      : const Color(0xFFE8F5E9),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Icon(
-                                  isRemote
-                                      ? Icons.devices_rounded
-                                      : Icons.location_on_rounded,
-                                  size: 16,
-                                  color: isRemote
-                                      ? const Color(0xFF1E88E5)
-                                      : const Color(0xFF43A047),
-                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                          );
-                        }).toList(),
-                      )
-                    else
-                      const SizedBox(
-                        height: 34,
-                      ), // Espacio de reserva si no hay modalidades
-                    // Bloque Central: El Spacer empuja uniformemente el bloque de la derecha sin importar qué pase a la izquierda
-                    const Spacer(),
-
-                    // Bloque Derecho: Acciones agrupadas para que NUNCA se muevan de su eje derecho
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        GestureDetector(
-                          onTap: widget.onViewProfile,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 9,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary,
-                              borderRadius: BorderRadius.circular(14),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.primary.withOpacity(0.2),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 3),
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.star_rounded,
+                                  size: 16,
+                                  color: Color(0xFFFFC940),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  p.rating.toStringAsFixed(1),
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.textSecondary,
+                                  ),
                                 ),
                               ],
                             ),
-                            child: const Text(
-                              'Ver perfil',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
-                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          p.handle,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        GestureDetector(
-                          onTap: widget.onToggleFavorite,
-                          child: AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 200),
-                            transitionBuilder: (child, anim) =>
-                                ScaleTransition(scale: anim, child: child),
-                            child: Icon(
-                              widget.isFavorite
-                                  ? Icons.star_rounded
-                                  : Icons.star_border_rounded,
-                              key: ValueKey(widget.isFavorite),
-                              size: 24,
-                              color: widget.isFavorite
-                                  ? const Color(0xFFFFC940)
-                                  : AppColors.textMuted.withOpacity(0.7),
+                        const SizedBox(height: 12),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    p.experience,
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    p.institution,
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
+                            GestureDetector(
+                              onTap: widget.onToggleFavorite,
+                              child: AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 200),
+                                transitionBuilder: (child, anim) =>
+                                    ScaleTransition(scale: anim, child: child),
+                                child: Icon(
+                                  widget.isFavorite
+                                      ? Icons.favorite_rounded
+                                      : Icons.favorite_border_rounded,
+                                  key: ValueKey(widget.isFavorite),
+                                  size: 24,
+                                  color: widget.isFavorite
+                                      ? const Color(0xFFE74C3C)
+                                      : AppColors.textMuted.withOpacity(0.7),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            if (p.modalities.isNotEmpty)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primaryLight.withOpacity(0.5),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  p.modalities.join(' / '),
+                                  style: const TextStyle(
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              )
+                            else
+                              const SizedBox(height: 34),
+                            const Spacer(),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFC780FF), // Violeta similar al mockup
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: const [
+                                  Icon(Icons.lock_outline_rounded, size: 16, color: Colors.white), // Asumiendo que es un lock por el mockup
+                                  SizedBox(width: 6),
+                                  Text(
+                                    'Ver Perfil',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
-              ],
-            ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+            ],
           ),
         ),
       ),
@@ -601,26 +572,26 @@ class _ProfessionalListItemState extends State<_ProfessionalListItem> {
   }
 }
 
-// ── Sheet de perfil detallado ─────────────────────────────────────────────────
-class _ProfessionalProfileSheet extends StatefulWidget {
+// ── Vista de Perfil Detallado (Pantalla Completa) ─────────────────────────────
+class ProfessionalDetailView extends StatefulWidget {
   final _Professional professional;
   final bool isFavorite;
   final VoidCallback onToggleFavorite;
   final Function(double) onRate;
 
-  const _ProfessionalProfileSheet({
+  const ProfessionalDetailView({
+    Key? key,
     required this.professional,
     required this.isFavorite,
     required this.onToggleFavorite,
     required this.onRate,
-  });
+  }) : super(key: key);
 
   @override
-  State<_ProfessionalProfileSheet> createState() =>
-      _ProfessionalProfileSheetState();
+  State<ProfessionalDetailView> createState() => _ProfessionalDetailViewState();
 }
 
-class _ProfessionalProfileSheetState extends State<_ProfessionalProfileSheet> {
+class _ProfessionalDetailViewState extends State<ProfessionalDetailView> {
   late bool _isFavorite;
 
   @override
@@ -633,167 +604,187 @@ class _ProfessionalProfileSheetState extends State<_ProfessionalProfileSheet> {
   Widget build(BuildContext context) {
     final p = widget.professional;
 
-    return Container(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 36),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: const Color(0xFFE8E8EE),
-                borderRadius: BorderRadius.circular(2),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textPrimary, size: 22),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: TextButton(
+              onPressed: () => _showRatingDialog(context, p.name, widget.onRate),
+              style: TextButton.styleFrom(
+                backgroundColor: const Color(0xFFC780FF), // Violeta del mockup
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+              ),
+              child: const Text(
+                'Evaluar',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
               ),
             ),
           ),
-          const SizedBox(height: 24),
-
-          // Header del bottom sheet
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: AppColors.primary.withOpacity(0.2),
-                    width: 2.5,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primary.withOpacity(0.06),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: CircleAvatar(
-                  radius: 32,
-                  backgroundColor: AppColors.primaryLight,
-                  backgroundImage: p.imageUrl.isNotEmpty
-                      ? NetworkImage(p.imageUrl)
-                      : null,
-                  child: p.imageUrl.isEmpty
-                      ? Text(
-                          p.name.isNotEmpty ? p.name[0] : '?',
-                          style: const TextStyle(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 22,
-                          ),
-                        )
-                      : null,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      p.name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 18,
-                        color: AppColors.textPrimary,
-                        letterSpacing: -0.4,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      p.handle,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    GestureDetector(
-                      onTap: () => _showRatingDialog(context, p.name, widget.onRate),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFF8E7),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.star_rounded,
-                              size: 14,
-                              color: Color(0xFFFFC940),
+          IconButton(
+            icon: Icon(
+              _isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+              color: _isFavorite ? const Color(0xFFE74C3C) : AppColors.textPrimary,
+              size: 26,
+            ),
+            onPressed: () {
+              setState(() => _isFavorite = !_isFavorite);
+              widget.onToggleFavorite();
+            },
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header Image con Info
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(28),
+                child: SizedBox(
+                  height: 380,
+                  width: double.infinity,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      // Imagen de fondo
+                      p.imageUrl.isNotEmpty
+                          ? Image.network(p.imageUrl, fit: BoxFit.cover)
+                          : Container(
+                              color: AppColors.primaryLight,
+                              child: const Icon(Icons.person, size: 100, color: AppColors.primary),
                             ),
-                            const SizedBox(width: 4),
+                      // Gradiente oscuro en la parte inferior
+                      DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              Colors.black.withOpacity(0.2),
+                              Colors.black.withOpacity(0.8),
+                            ],
+                          ),
+                        ),
+                      ),
+                      // Info superpuesta
+                      Positioned(
+                        bottom: 24,
+                        left: 20,
+                        right: 20,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
                             Text(
-                              p.rating.toStringAsFixed(1),
+                              p.name,
                               style: const TextStyle(
-                                fontSize: 13,
+                                color: Colors.white,
+                                fontSize: 24,
                                 fontWeight: FontWeight.w700,
-                                color: Color(0xFF8A6800),
                               ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              p.handle.replaceAll('@', ''),
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                const Icon(Icons.location_on_outlined, color: Colors.white, size: 16),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    p.city.isNotEmpty ? p.city : 'Ubicación no especificada',
+                                    style: const TextStyle(color: Colors.white, fontSize: 13),
+                                  ),
+                                ),
+                                const Icon(Icons.star_rounded, color: Color(0xFFFFC940), size: 16),
+                                const SizedBox(width: 4),
+                                Text(
+                                  p.rating.toStringAsFixed(1),
+                                  style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700),
+                                ),
+                              ],
                             ),
                           ],
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              GestureDetector(
-                onTap: () {
-                  setState(() => _isFavorite = !_isFavorite);
-                  widget.onToggleFavorite();
-                },
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
-                  transitionBuilder: (child, anim) =>
-                      ScaleTransition(scale: anim, child: child),
-                  child: Icon(
-                    _isFavorite
-                        ? Icons.star_rounded
-                        : Icons.star_border_rounded,
-                    key: ValueKey(_isFavorite),
-                    size: 28,
-                    color: _isFavorite
-                        ? const Color(0xFFFFC940)
-                        : AppColors.textMuted,
+                    ],
                   ),
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          Container(height: 1, color: const Color(0xFFF0F0F5)),
-          const SizedBox(height: 20),
-
-          // Detalles descriptivos en el Sheet
-          _DetailRow(icon: Icons.school_outlined, text: p.institution),
-          const SizedBox(height: 14),
-          _DetailRow(icon: Icons.work_outline_rounded, text: p.experience),
-          const SizedBox(height: 14),
-          _DetailRow(
-            icon: Icons.place_outlined,
-            text: p.modalities.isNotEmpty
-                ? 'Atención ${p.modalities.join(' / ')}'
-                : 'Modalidad no especificada',
-          ),
-          const SizedBox(height: 28),
-
-          // Botón contactar premium unificado
-          _ContactButton(onPressed: () {}),
-        ],
+            ),
+            
+            // Iconos de Horario y Modalidad
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.access_time_rounded, color: AppColors.textPrimary, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    p.businessHours.isNotEmpty ? p.businessHours : 'Horario no especificado',
+                    style: const TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.w500),
+                  ),
+                  const SizedBox(width: 24),
+                  const Icon(Icons.calendar_today_rounded, color: AppColors.textPrimary, size: 18),
+                  const SizedBox(width: 8),
+                  Text(
+                    p.modalities.isNotEmpty ? p.modalities.join(' / ') : 'Presencial',
+                    style: const TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
+            ),
+            
+            const SizedBox(height: 24),
+            
+            // Sección Perfil Profesional
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24.0),
+              child: Text(
+                'Perfil Profesional',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Text(
+                p.description,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: AppColors.textSecondary,
+                  height: 1.6,
+                ),
+              ),
+            ),
+            const SizedBox(height: 40),
+          ],
+        ),
       ),
     );
   }
@@ -849,110 +840,6 @@ class _ProfessionalProfileSheetState extends State<_ProfessionalProfileSheet> {
           }
         );
       }
-    );
-  }
-}
-
-class _DetailRow extends StatelessWidget {
-  final IconData icon;
-  final String text;
-
-  const _DetailRow({required this.icon, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: AppColors.primaryLight,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, size: 18, color: AppColors.primary),
-        ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(
-              text,
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-                height: 1.45,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ContactButton extends StatefulWidget {
-  final VoidCallback onPressed;
-  const _ContactButton({required this.onPressed});
-
-  @override
-  State<_ContactButton> createState() => _ContactButtonState();
-}
-
-class _ContactButtonState extends State<_ContactButton> {
-  bool _pressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _pressed = true),
-      onTapUp: (_) {
-        setState(() => _pressed = false);
-        widget.onPressed();
-      },
-      onTapCancel: () => setState(() => _pressed = false),
-      child: AnimatedScale(
-        scale: _pressed ? 0.975 : 1.0,
-        duration: const Duration(milliseconds: 120),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          width: double.infinity,
-          height: 54,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: _pressed
-                  ? [
-                      AppColors.primary.withOpacity(0.88),
-                      const Color(0xFF7B2FBE),
-                    ]
-                  : [AppColors.primary, const Color(0xFF8B3FD4)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(30),
-            boxShadow: _pressed
-                ? []
-                : [
-                    BoxShadow(
-                      color: AppColors.primary.withOpacity(0.28),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-          ),
-          alignment: Alignment.center,
-          child: const Text(
-            'Contactar / Agendar',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-              letterSpacing: 0.2,
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

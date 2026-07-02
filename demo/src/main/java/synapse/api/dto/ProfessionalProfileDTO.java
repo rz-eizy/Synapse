@@ -13,6 +13,11 @@ public class ProfessionalProfileDTO {
     private UUID professionalId;
     private String professionName;
     private String institutions;
+    private Integer yearsExperience;
+    private String city;
+    private String businessHours;
+    private String modality;
+    private String professionalDescription;
     private int costWork;
     private String username;          
     private String profilePictureUrl;  
