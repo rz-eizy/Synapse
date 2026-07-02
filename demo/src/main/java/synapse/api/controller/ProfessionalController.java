@@ -56,12 +56,12 @@ public class ProfessionalController {
     @GetMapping("/list")
     public ResponseEntity<Page<ProfessionalProfileDTO>> getProfessionalList(
         @RequestParam(value = "profession_name", required = false) String professionName,
-        @RequestParam(value = "current_work", required = false) String currentWork,
+        @RequestParam(value = "institutions", required = false) String institutions,
         @RequestParam(value = "stars", required = false) Double stars,
         @RequestParam(value = "page", defaultValue = "0") int page,
         @RequestParam(value = "size", defaultValue = "20") int size 
     ) {
-        Page<ProfessionalProfileDTO> list = service.filterProfesional(professionName, currentWork, stars, page, size);
+        Page<ProfessionalProfileDTO> list = service.filterProfesional(professionName, institutions, stars, page, size);
         return ResponseEntity.ok(list);
     }
     

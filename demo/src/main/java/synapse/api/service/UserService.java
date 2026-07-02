@@ -81,6 +81,12 @@ public class UserService {
             uProfile.setRejectedRequestMotive(rejectedReq.getAdminNotes());
         }
 
+        if ("professional".equals(u.getRole())) {
+            uProfile.setProfessionalOnboarded(u.getProfessional() != null && u.getProfessional().getYearsExperience() != null);
+        } else {
+            uProfile.setProfessionalOnboarded(false);
+        }
+
         return uProfile;
     }
 

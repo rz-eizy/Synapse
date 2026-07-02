@@ -21,4 +21,5 @@ public class UserProfileDTO {
     private String role;
     private String rejectedRequestId;
     private String rejectedRequestMotive;
+    private boolean professionalOnboarded;
 }

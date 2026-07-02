@@ -79,4 +79,21 @@ class UserApiService{
       return 'Error de conexión';
     }
   }
+
+  Future<bool> updateProfessionalProfile(String token, Map<String, dynamic> data) async {
+    try {
+      final response = await http.patch(
+        Uri.parse('${ApiConfig.baseUrl}/professional/me'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(data),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Error al actualizar perfil profesional: $e');
+      return false;
+    }
+  }
 }

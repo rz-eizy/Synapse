@@ -37,13 +37,17 @@ CREATE TABLE IF NOT EXISTS user_sensitive_data (
 CREATE TABLE IF NOT EXISTS professional_profiles (
     user_id UUID PRIMARY KEY REFERENCES users(user_id) ON DELETE CASCADE,
     official_title VARCHAR(255),
-    university_of_degree VARCHAR(255), -- RF-21 [cite: 29]
+    institutions VARCHAR(255),
     years_experience INTEGER, -- RF-21 [cite: 29]
     session_price NUMERIC(10, 2), -- RF-22 [cite: 30]
-    health_registry_id VARCHAR(50), -- RF-03 [cite: 8]
-    is_accredited BOOLEAN DEFAULT FALSE, -- RF-03 [cite: 8]
     external_contact_link TEXT, -- RF-08, RF-23 [cite: 13, 31]
-    business_hours VARCHAR(100)
+    business_hours VARCHAR(100),
+    city VARCHAR(100),
+    work_region VARCHAR(100),
+    modality VARCHAR(50),
+    professional_description TEXT,
+    health_coverage TEXT,
+    treated_diagnostics TEXT
 );
 
 CREATE TABLE IF NOT EXISTS posts (
@@ -94,7 +98,7 @@ CREATE TABLE IF NOT EXISTS professional_requests (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
     profession_name VARCHAR(255),
-    current_work VARCHAR(255),
+    institutions VARCHAR(255),
     verification_picture TEXT NOT NULL,
     cost_work INTEGER,
     status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
@@ -119,11 +123,11 @@ VALUES
 ('22222222-2222-2222-2222-222222222222', 'Juan José Roca', 'juan.roca@psicologo.cl', '$2a$10$erhFX6pgiS7js5qzIwuypOU3yRvmBbRkS.WfuExXuhlF5KExVxtoC', 'professional', 'Metropolitana'),
 ('33333333-3333-3333-3333-333333333333', 'Siomara Zapata', 'siomara.z@psicologa.cl', '$2a$10$erhFX6pgiS7js5qzIwuypOU3yRvmBbRkS.WfuExXuhlF5KExVxtoC', 'professional', 'Araucanía');
 
-INSERT INTO professional_profiles (user_id, official_title, university_of_degree, years_experience, session_price, health_registry_id, is_accredited, business_hours)
+INSERT INTO professional_profiles (user_id, official_title, institutions, years_experience, session_price, business_hours)
 VALUES 
-('11111111-1111-1111-1111-111111111111', 'Médico', 'Universidad de Concepción', 3, 30000.00, 'REG-123', TRUE, '09:00 - 18:00'),
-('22222222-2222-2222-2222-222222222222', 'Psicólogo', 'Pontificia Universidad Católica de Chile', 37, 45000.00, 'REG-456', TRUE, '08:00 - 17:00'),
-('33333333-3333-3333-3333-333333333333', 'Psicóloga', 'Universidad de Chile', 20, 40000.00, 'REG-789', TRUE, '10:00 - 19:00');
+('11111111-1111-1111-1111-111111111111', 'Médico', 'Hospital Regional', 3, 30000.00, '09:00 - 18:00'),
+('22222222-2222-2222-2222-222222222222', 'Psicólogo', 'Clínica Alemana', 37, 45000.00, '08:00 - 17:00'),
+('33333333-3333-3333-3333-333333333333', 'Psicóloga', 'Centro Médico Integral', 20, 40000.00, '10:00 - 19:00');
 
 -- Ratings de prueba para que tengan "averageStars"
 INSERT INTO professional_ratings (reviewer_id, professional_id, stars)

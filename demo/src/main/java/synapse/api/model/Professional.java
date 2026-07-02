@@ -35,8 +35,8 @@ public class Professional {
     @Column(name = "official_title", nullable = false)
     private String professionName;
 
-    @Column(name = "university_of_degree", nullable = false)
-    private String currentWork;
+    @Column(name = "institutions", nullable = false)
+    private String institutions;
 
     @Column(name = "external_contact_link")
     private String personalContact;
@@ -45,7 +45,28 @@ public class Professional {
     private String businessHours;
 
     @Column(name = "session_price")
-    private int costWork;
+    private Integer costWork;
+
+    @Column(name = "years_experience")
+    private Integer yearsExperience;
+
+    @Column(name = "city")
+    private String city;
+
+    @Column(name = "work_region")
+    private String workRegion;
+
+    @Column(name = "modality")
+    private String modality;
+
+    @Column(name = "professional_description")
+    private String professionalDescription;
+
+    @Column(name = "health_coverage")
+    private String healthCoverage;
+
+    @Column(name = "treated_diagnostics")
+    private String treatedDiagnostics;
 
     @OneToMany(mappedBy = "professional", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore

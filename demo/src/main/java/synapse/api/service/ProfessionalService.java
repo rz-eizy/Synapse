@@ -52,12 +52,12 @@ public class ProfessionalService {
 
     public Page<ProfessionalProfileDTO> filterProfesional(
         String professionName, 
-        String currentWork, 
+        String institutions, 
         Double stars, 
         int page, int size
     ) {
         Pageable pageable = PageRequest.of(page, size);
-        return repository.findProfessionalByFilters(professionName, currentWork, stars, pageable);
+        return repository.findProfessionalByFilters(professionName, institutions, stars, pageable);
     }
 
     @Transactional
@@ -94,10 +94,17 @@ public class ProfessionalService {
             .orElseThrow(ProfessionalNotFound::new);
         
         if (dto.getProfessionName() != null && !dto.getProfessionName().isBlank()) p.setProfessionName(dto.getProfessionName());
-        if (dto.getCurrentWork() != null && !dto.getCurrentWork().isBlank()) p.setCurrentWork(dto.getCurrentWork());
+        if (dto.getInstitutions() != null && !dto.getInstitutions().isBlank()) p.setInstitutions(dto.getInstitutions());
         if (dto.getPersonalContact() != null && !dto.getPersonalContact().isBlank()) p.setPersonalContact(dto.getPersonalContact());
         if (dto.getBusinessHours() != null && !dto.getBusinessHours().isBlank()) p.setBusinessHours(dto.getBusinessHours());
         if (dto.getCostWork() != null) p.setCostWork(dto.getCostWork());
+        if (dto.getYearsExperience() != null) p.setYearsExperience(dto.getYearsExperience());
+        if (dto.getCity() != null && !dto.getCity().isBlank()) p.setCity(dto.getCity());
+        if (dto.getWorkRegion() != null && !dto.getWorkRegion().isBlank()) p.setWorkRegion(dto.getWorkRegion());
+        if (dto.getModality() != null && !dto.getModality().isBlank()) p.setModality(dto.getModality());
+        if (dto.getProfessionalDescription() != null && !dto.getProfessionalDescription().isBlank()) p.setProfessionalDescription(dto.getProfessionalDescription());
+        if (dto.getHealthCoverage() != null && !dto.getHealthCoverage().isBlank()) p.setHealthCoverage(dto.getHealthCoverage());
+        if (dto.getTreatedDiagnostics() != null && !dto.getTreatedDiagnostics().isBlank()) p.setTreatedDiagnostics(dto.getTreatedDiagnostics());
         return p; 
     }
 

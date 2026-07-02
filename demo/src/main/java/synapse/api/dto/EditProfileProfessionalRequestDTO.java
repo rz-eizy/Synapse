@@ -12,8 +12,15 @@ public class EditProfileProfessionalRequestDTO {
     private String description;
     // Datos de professional
     private String professionName;
-    private String currentWork;
+    private String institutions;
     private String personalContact;
     private String businessHours;
     private Integer costWork;
+    private Integer yearsExperience;
+    private String city;
+    private String workRegion;
+    private String modality;
+    private String professionalDescription;
+    private String healthCoverage;
+    private String treatedDiagnostics;
 }

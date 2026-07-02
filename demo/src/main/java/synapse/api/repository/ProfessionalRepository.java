@@ -12,41 +12,41 @@ import synapse.api.dto.ProfessionalProfileDTO;
 
 public interface ProfessionalRepository extends JpaRepository<Professional, UUID> {    
     @Query("SELECT new synapse.api.dto.ProfessionalProfileDTO(" +
-           "p.id, p.professionName, p.currentWork, p.costWork, u.username, u.profilePictureUrl, " +
+           "p.id, p.professionName, p.institutions, p.costWork, u.username, u.profilePictureUrl, " +
            "COALESCE(AVG(r.stars), 0.0), COUNT(r)) " +
            "FROM Professional p " +
            "JOIN p.user u " +
            "LEFT JOIN p.ratings r " +
            "WHERE p.id = :professionalId " +
-           "GROUP BY p.id, p.professionName, p.currentWork, p.costWork, u.username, u.profilePictureUrl")
+           "GROUP BY p.id, p.professionName, p.institutions, p.costWork, u.username, u.profilePictureUrl")
     Optional<ProfessionalProfileDTO> findProfileById(@Param("professionalId") UUID professionalId);
 
     @Query("SELECT new synapse.api.dto.ProfessionalProfileDTO(" +
-       "p.id, p.professionName, p.currentWork, p.costWork, u.username, u.profilePictureUrl, " +
+       "p.id, p.professionName, p.institutions, p.costWork, u.username, u.profilePictureUrl, " +
        "COALESCE(AVG(r.stars), 0.0), COUNT(r)) " +
        "FROM Professional p " +
        "JOIN p.user u " +
        "LEFT JOIN p.ratings r " +
        "WHERE (:profession_name IS NULL OR p.professionName = :profession_name) " +
-       "AND (:current_work IS NULL OR p.currentWork = :current_work) " +
-       "GROUP BY p.id, p.professionName, p.currentWork, p.costWork, u.username, u.profilePictureUrl " +
+       "AND (:institutions IS NULL OR p.institutions = :institutions) " +
+       "GROUP BY p.id, p.professionName, p.institutions, p.costWork, u.username, u.profilePictureUrl " +
        "HAVING (:stars IS NULL OR COALESCE(AVG(r.stars), 0.0) = :stars) " +
        "ORDER BY COALESCE(AVG(r.stars), 0.0) DESC") 
     Page<ProfessionalProfileDTO> findProfessionalByFilters(
         @Param("profession_name") String professionName,
-        @Param("current_work") String currentWork,
+        @Param("institutions") String institutions,
         @Param("stars") Double stars, 
         Pageable pageable
     );
 
     @Query("SELECT new synapse.api.dto.ProfessionalProfileDTO(" +
-       "p.id, p.professionName, p.currentWork, p.costWork, u.username, u.profilePictureUrl, " +
+       "p.id, p.professionName, p.institutions, p.costWork, u.username, u.profilePictureUrl, " +
        "COALESCE(AVG(r.stars), 0.0), COUNT(r)) " +
        "FROM Professional p " +
        "JOIN p.user u " +
        "LEFT JOIN p.ratings r " +
        "WHERE u IN (SELECT fav FROM User owner JOIN owner.favorites fav WHERE owner.id = :userId) " +
-       "GROUP BY p.id, p.professionName, p.currentWork, p.costWork, u.username, u.profilePictureUrl")
+       "GROUP BY p.id, p.professionName, p.institutions, p.costWork, u.username, u.profilePictureUrl")
     Page<ProfessionalProfileDTO> findFavoriteProfessionalsByUserId(
         @Param("userId") UUID userId,
         Pageable pageable

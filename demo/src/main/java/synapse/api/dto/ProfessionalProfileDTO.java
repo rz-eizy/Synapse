@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 public class ProfessionalProfileDTO {
     private UUID professionalId;
     private String professionName;
-    private String currentWork;
+    private String institutions;
     private int costWork;
     private String username;          
     private String profilePictureUrl;  

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
+
+import '../../widgets/upgrade_professional_dialog.dart';
+import 'professional_onboarding_view.dart';
 import '../../widgets/professional_card.dart';
 import '../account/account_view.dart';
 import '../../widgets/community_card.dart';
@@ -78,6 +81,55 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       setState(() {
         _isProfessional = profileData['role'] == 'professional'; 
       });
+
+      if (_isProfessional && profileData['professionalOnboarded'] == false) {
+        if (mounted) {
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (ctx) => AlertDialog(
+              backgroundColor: Colors.white,
+              surfaceTintColor: Colors.transparent,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              title: const Row(
+                children: [
+                  Icon(Icons.check_circle_outline, color: AppColors.success, size: 28),
+                  SizedBox(width: 8),
+                  Text('¡Felicidades!', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                ],
+              ),
+              content: const Text(
+                'Tu solicitud para ser Profesional ha sido aprobada.\n\nAhora tienes acceso a nuevas funciones en la plataforma. Para continuar, necesitamos que completes la información de tu perfil profesional.',
+                style: TextStyle(color: AppColors.textPrimary, fontSize: 15, height: 1.4),
+              ),
+              actions: [
+                TextButton(
+                  style: TextButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  onPressed: () {
+                    if (ctx.mounted) Navigator.pop(ctx);
+                    if (mounted) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const ProfessionalOnboardingView()),
+                      ).then((_) {
+                        _checkUserRole();
+                      });
+                    }
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+                    child: Text('Completar Perfil', style: TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+      }
 
       if (profileData['rejectedRequestId'] != null) {
         final reqId = profileData['rejectedRequestId'];

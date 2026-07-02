@@ -97,7 +97,7 @@ public class ProfessionalRequestService {
         
         Professional prof = new Professional();
         prof.setProfessionName(professionName);
-        prof.setCurrentWork(""); // default empty value for required DB column
+        prof.setInstitutions(""); // default empty value for required DB column
         prof.setCostWork(0);
         prof.setUser(user); 
         
