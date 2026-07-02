@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
+import synapse.api.dto.admin.AccountRoleUpdate;
 import synapse.api.dto.admin.AccountStatusUpdateRequestDTO;
 import synapse.api.dto.admin.AdminAccountDetailDTO;
 import synapse.api.model.AccountModerationLog;
@@ -69,5 +70,14 @@ public class AdminAccountController {
     ) {
         Pageable pageable = PageRequest.of(page, limit);
         return ResponseEntity.ok(service.getAccountHistory(id, pageable));
+    }
+
+    @PatchMapping("/{userId}/update")
+    public ResponseEntity<AccountRoleUpdate> patchRoleUpdate(
+        @PathVariable UUID userId,
+        @AuthenticationPrincipal CustomUserDetails principal
+    ){
+        AccountRoleUpdate update = service.updateRolUser(principal.getId(), userId);
+        return ResponseEntity.ok(update);
     }
 }

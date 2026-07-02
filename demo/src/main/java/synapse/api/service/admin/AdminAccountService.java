@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import synapse.api.dto.admin.AccountRoleUpdate;
 import synapse.api.dto.admin.AccountStatusUpdateRequestDTO;
 import synapse.api.dto.admin.AdminAccountDetailDTO;
 import synapse.api.exeption.CannotModifyOwnAccountException;
@@ -92,5 +93,35 @@ public class AdminAccountService {
 
     public Page<AccountModerationLog> getAccountHistory(UUID targetUserId, Pageable pageable) {
         return moderationLogRepository.findByTargetUserId(targetUserId, pageable);
+    }
+
+    @Transactional
+    public AccountRoleUpdate updateRolUser(UUID adminId, UUID userId) {
+        if (adminId.equals(userId)) throw new IllegalArgumentException("Un administrador no puede cambiar su propio rol");
+        final String ROLE_ADMIN = "ADMIN";
+        final String ROLE_REGULAR = "USER"; 
+
+        User admin = userRepository.findById(adminId)
+                .orElseThrow(UserNotFound::new);  
+        if (!ROLE_ADMIN.equalsIgnoreCase(admin.getRole())) throw new IllegalArgumentException("El usuario no tiene permisos de administrador");
+
+        User u = userRepository.findById(userId)
+                .orElseThrow(UserNotFound::new);
+        String pastRole = u.getRole();
+
+        if (!ROLE_ADMIN.equalsIgnoreCase(pastRole)) {
+            u.setRole(ROLE_ADMIN);
+        } else {
+            u.setRole(ROLE_REGULAR);
+        }
+
+        return new AccountRoleUpdate(
+            u.getId(), 
+            u.getUsername(), 
+            pastRole, 
+            u.getRole(), 
+            adminId, 
+            LocalDateTime.now(clock)
+        );
     }
 }
