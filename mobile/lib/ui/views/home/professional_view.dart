@@ -189,8 +189,8 @@ class _ProfessionalsViewState extends State<ProfessionalsView>
           onPressed: () => Navigator.pop(context),
         ),
         title: Image.asset(
-          'assets/images/AppBar_logoAppoyo.png',
-          height: 28,
+          'assets/images/Appoyo_logo.png',
+          height: 65,
           errorBuilder: (_, __, ___) => const Text(
             'APPOYO',
             style: TextStyle(
@@ -207,7 +207,6 @@ class _ProfessionalsViewState extends State<ProfessionalsView>
         opacity: _fadeAnimation,
         child: Column(
           children: [
-            // ── Tab selector premium ──────────────────────────────────────
             Container(
               color: Colors.white,
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
@@ -236,7 +235,6 @@ class _ProfessionalsViewState extends State<ProfessionalsView>
               ),
             ),
 
-            // ── Lista de Tarjetas Rediseñadas ──────────────────────────────
             Expanded(
               child: _isLoading
                   ? const Center(
@@ -313,7 +311,6 @@ class _ProfessionalsViewState extends State<ProfessionalsView>
   }
 }
 
-// ── Tab del selector ──────────────────────────────────────────────────────────
 class _Tab extends StatelessWidget {
   final String label;
   final bool active;
@@ -358,7 +355,6 @@ class _Tab extends StatelessWidget {
   }
 }
 
-// ── Ítem de la lista (Tarjeta Premium con Alineación Fija Coherente) ──────────
 class _ProfessionalListItem extends StatefulWidget {
   final _Professional professional;
   final bool isFavorite;

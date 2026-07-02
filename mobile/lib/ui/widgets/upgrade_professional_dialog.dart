@@ -48,7 +48,6 @@ class _UpgradeProfessionalDialogState extends State<UpgradeProfessionalDialog> {
         return;
       }
 
-      // Subir imagen a Cloudflare
       final urls = await _pubApiService.getUploadURLs(token, "image/jpeg");
       if (urls != null) {
         bool uploaded = await _pubApiService.uploadImageToCloudFlare(
@@ -58,7 +57,6 @@ class _UpgradeProfessionalDialogState extends State<UpgradeProfessionalDialog> {
         );
         if (uploaded) {
           final imageUrl = urls['publicUrl']!;
-          // Hacer la petición de ascenso a profesional
           String? errorMsg = await _userApiService.requestProfessionalUpgrade(token, imageUrl);
           if (mounted) {
             if (errorMsg == null) {
@@ -108,6 +106,18 @@ class _UpgradeProfessionalDialogState extends State<UpgradeProfessionalDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: const BoxDecoration(
+                color: AppColors.primaryLight,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.verified_outlined,
+                  color: AppColors.primary, size: 28),
+            ),
+            const SizedBox(height: 16),
+
             const Text(
               'Validación de Título',
               style: TextStyle(
@@ -116,87 +126,126 @@ class _UpgradeProfessionalDialogState extends State<UpgradeProfessionalDialog> {
                 color: AppColors.textPrimary,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
+
             const Text(
               'Un perfil profesional obtiene una etiqueta destacada, la capacidad de subir imágenes en sus publicaciones y una mayor visibilidad para las empresas.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 13,
                 color: AppColors.textSecondary,
-                height: 1.4,
+                height: 1.5,
               ),
             ),
             const SizedBox(height: 24),
+
             GestureDetector(
               onTap: _pickImage,
-              child: Container(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
                 width: double.infinity,
                 height: 160,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: _selectedImage != null
+                      ? Colors.transparent
+                      : AppColors.primaryLight,
                   borderRadius: BorderRadius.circular(16),
-                  border: _selectedImage == null 
-                      ? Border.all(color: const Color(0xFFE8E8EE), width: 1.5)
-                      : Border.all(color: AppColors.primary, width: 2),
+                  border: Border.all(
+                    color: _selectedImage != null
+                        ? AppColors.primary
+                        : AppColors.primaryMedium,
+                    width: 1.5,
+                  ),
                 ),
                 child: _selectedImage != null
                     ? ClipRRect(
                         borderRadius: BorderRadius.circular(14),
                         child: Image.file(_selectedImage!, fit: BoxFit.cover),
                       )
-                    : const Column(
+                    : Column(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.upload_rounded,
-                            size: 40,
-                            color: AppColors.textSecondary,
-                          ),
-                          SizedBox(height: 12),
+                        children: const [
+                          Icon(Icons.upload_rounded,
+                              size: 36, color: AppColors.primary),
+                          SizedBox(height: 10),
                           Text(
-                            'Subir Imagen de Carnet\nAmbos Costados',
+                            'Subir imagen de carnet\nambos costados',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              fontSize: 14,
+                              fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.textSecondary,
+                              color: AppColors.primary,
+                              height: 1.4,
                             ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Toca para seleccionar',
+                            style: TextStyle(
+                                fontSize: 11, color: AppColors.textMuted),
                           ),
                         ],
                       ),
               ),
             ),
-            const SizedBox(height: 28),
+
+            // Indicador de imagen seleccionada
+            if (_selectedImage != null) ...[
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.check_circle,
+                      color: AppColors.primary, size: 14),
+                  const SizedBox(width: 4),
+                  const Text(
+                    'Imagen seleccionada',
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w500),
+                  ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: _pickImage,
+                    child: const Text(
+                      'Cambiar',
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textMuted,
+                          decoration: TextDecoration.underline),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+            const SizedBox(height: 24),
+
             SizedBox(
               width: double.infinity,
-              height: 52,
+              height: 50,
               child: ElevatedButton(
                 onPressed: (_selectedImage == null || _isLoading) ? null : _submit,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
-                  disabledBackgroundColor: const Color(0xFFC4C4C4),
+                  disabledBackgroundColor: AppColors.primaryLight,
+                  foregroundColor: Colors.white,
+                  disabledForegroundColor: AppColors.textMuted,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(26),
                   ),
                   elevation: 0,
+                  textStyle: const TextStyle(
+                      fontSize: 15, fontWeight: FontWeight.w600),
                 ),
                 child: _isLoading
                     ? const SizedBox(
                         height: 20,
                         width: 20,
                         child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
+                            color: Colors.white, strokeWidth: 2),
                       )
-                    : const Text(
-                        'Enviar',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
+                    : const Text('Enviar solicitud'),
               ),
             ),
           ],

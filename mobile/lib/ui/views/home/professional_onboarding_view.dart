@@ -7,10 +7,12 @@ class ProfessionalOnboardingView extends StatefulWidget {
   const ProfessionalOnboardingView({Key? key}) : super(key: key);
 
   @override
-  _ProfessionalOnboardingViewState createState() => _ProfessionalOnboardingViewState();
+  _ProfessionalOnboardingViewState createState() =>
+      _ProfessionalOnboardingViewState();
 }
 
-class _ProfessionalOnboardingViewState extends State<ProfessionalOnboardingView> {
+class _ProfessionalOnboardingViewState
+    extends State<ProfessionalOnboardingView> {
   final _formKey = GlobalKey<FormState>();
   final _yearsController = TextEditingController();
   final _priceController = TextEditingController();
@@ -23,20 +25,21 @@ class _ProfessionalOnboardingViewState extends State<ProfessionalOnboardingView>
   String _selectedModality = 'Presencial';
 
   final List<String> _regions = [
-    'Arica y Parinacota', 'Tarapacá', 'Antofagasta', 'Atacama', 'Coquimbo', 'Valparaíso',
-    'Metropolitana', 'O\'Higgins', 'Maule', 'Ñuble', 'Biobío', 'La Araucanía',
-    'Los Ríos', 'Los Lagos', 'Aysén', 'Magallanes'
+    'Arica y Parinacota', 'Tarapacá', 'Antofagasta', 'Atacama', 'Coquimbo',
+    'Valparaíso', 'Metropolitana', 'O\'Higgins', 'Maule', 'Ñuble', 'Biobío',
+    'La Araucanía', 'Los Ríos', 'Los Lagos', 'Aysén', 'Magallanes',
   ];
-
   final List<String> _modalities = ['Presencial', 'Online', 'Híbrido'];
 
-  final List<String> _availableHealthCoverages = ['Fonasa', 'Isapre', 'Dipreca', 'Capredena'];
+  final List<String> _availableHealthCoverages = [
+    'Fonasa', 'Isapre', 'Dipreca', 'Capredena'
+  ];
   final List<String> _selectedHealthCoverages = [];
 
   final List<String> _availableDiagnostics = [
     'TEA', 'TDAH', 'Dislexia', 'Discalculia', 'Disgrafía', 'Dispraxia',
     'S. de Tourette', 'Tics', 'TEL', 'Tartamudez', 'T. Comunicación Social',
-    'Disc. Intelectual', 'Altas Capacidades'
+    'Disc. Intelectual', 'Altas Capacidades',
   ];
   final List<String> _selectedDiagnostics = [];
 
@@ -44,7 +47,6 @@ class _ProfessionalOnboardingViewState extends State<ProfessionalOnboardingView>
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    
     setState(() => _isLoading = true);
 
     const storage = FlutterSecureStorage();
@@ -60,7 +62,7 @@ class _ProfessionalOnboardingViewState extends State<ProfessionalOnboardingView>
       'modality': _selectedModality,
       'professionalDescription': _descriptionController.text,
       'healthCoverage': _selectedHealthCoverages.join(', '),
-      'treatedDiagnostics': _selectedDiagnostics.join(', ')
+      'treatedDiagnostics': _selectedDiagnostics.join(', '),
     };
 
     final apiService = UserApiService();
@@ -72,9 +74,45 @@ class _ProfessionalOnboardingViewState extends State<ProfessionalOnboardingView>
       Navigator.pop(context);
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error al guardar el perfil. Inténtalo de nuevo.')),
+        const SnackBar(
+            content: Text('Error al guardar el perfil. Inténtalo de nuevo.')),
       );
     }
+  }
+
+  InputDecoration _fieldDecoration(String label, {IconData? icon}) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle:
+          const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+      prefixIcon: icon != null
+          ? Icon(icon, color: AppColors.primaryMedium, size: 20)
+          : null,
+      filled: true,
+      fillColor: AppColors.surface,
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: AppColors.error, width: 1.5),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: AppColors.error, width: 1.5),
+      ),
+    );
   }
 
   @override
@@ -82,145 +120,280 @@ class _ProfessionalOnboardingViewState extends State<ProfessionalOnboardingView>
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Completar Perfil Profesional', style: TextStyle(color: AppColors.textPrimary, fontSize: 18)),
-        backgroundColor: AppColors.surface,
+        backgroundColor: AppColors.appBarBg,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.primary),
-        automaticallyImplyLeading: false, // Prevent back navigation
+        automaticallyImplyLeading: false,
+        title: const Text(
+          'Completar Perfil Profesional',
+          style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 17,
+              fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.all(20),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Información General', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary)),
-              const SizedBox(height: 16),
+              _SectionHeader(
+                  icon: Icons.person_outline, title: 'Información General'),
+              const SizedBox(height: 14),
+
               TextFormField(
                 controller: _yearsController,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Años de experiencia', border: OutlineInputBorder()),
-                validator: (val) => val == null || val.isEmpty ? 'Requerido' : null,
+                decoration: _fieldDecoration('Años de experiencia',
+                    icon: Icons.work_outline),
+                validator: (val) =>
+                    val == null || val.isEmpty ? 'Requerido' : null,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
+
               TextFormField(
                 controller: _priceController,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Precio por sesión (0 si es gratis)', border: OutlineInputBorder()),
-                validator: (val) => val == null || val.isEmpty ? 'Requerido' : null,
+                decoration: _fieldDecoration(
+                    'Precio por sesión (0 si es gratis)',
+                    icon: Icons.attach_money),
+                validator: (val) =>
+                    val == null || val.isEmpty ? 'Requerido' : null,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
+
               TextFormField(
                 controller: _descriptionController,
                 maxLines: 3,
-                decoration: const InputDecoration(labelText: 'Breve descripción de lo que haces', border: OutlineInputBorder()),
-                validator: (val) => val == null || val.isEmpty ? 'Requerido' : null,
+                decoration: _fieldDecoration(
+                    'Breve descripción de lo que haces',
+                    icon: Icons.description_outlined),
+                validator: (val) =>
+                    val == null || val.isEmpty ? 'Requerido' : null,
               ),
-              
-              const SizedBox(height: 32),
-              const Text('Ubicación y Modalidad', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary)),
-              const SizedBox(height: 16),
+
+              const SizedBox(height: 28),
+              _SectionHeader(
+                  icon: Icons.location_on_outlined,
+                  title: 'Ubicación y Modalidad'),
+              const SizedBox(height: 14),
+
               DropdownButtonFormField<String>(
                 value: _selectedRegion,
-                decoration: const InputDecoration(labelText: 'Región de trabajo', border: OutlineInputBorder()),
-                items: _regions.map((r) => DropdownMenuItem(value: r, child: Text(r))).toList(),
-                onChanged: (val) => setState(() => _selectedRegion = val!),
+                decoration: _fieldDecoration('Región de trabajo',
+                    icon: Icons.map_outlined),
+                dropdownColor: Colors.white,
+                style: const TextStyle(
+                    color: AppColors.textPrimary, fontSize: 14),
+                items: _regions
+                    .map((r) =>
+                        DropdownMenuItem(value: r, child: Text(r)))
+                    .toList(),
+                onChanged: (val) =>
+                    setState(() => _selectedRegion = val!),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
+
               TextFormField(
                 controller: _cityController,
-                decoration: const InputDecoration(labelText: 'Ciudad', border: OutlineInputBorder()),
-                validator: (val) => val == null || val.isEmpty ? 'Requerido' : null,
+                decoration: _fieldDecoration('Ciudad',
+                    icon: Icons.location_city_outlined),
+                validator: (val) =>
+                    val == null || val.isEmpty ? 'Requerido' : null,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
+
               DropdownButtonFormField<String>(
                 value: _selectedModality,
-                decoration: const InputDecoration(labelText: 'Modalidad de atención', border: OutlineInputBorder()),
-                items: _modalities.map((m) => DropdownMenuItem(value: m, child: Text(m))).toList(),
-                onChanged: (val) => setState(() => _selectedModality = val!),
+                decoration: _fieldDecoration('Modalidad de atención',
+                    icon: Icons.videocam_outlined),
+                dropdownColor: Colors.white,
+                style: const TextStyle(
+                    color: AppColors.textPrimary, fontSize: 14),
+                items: _modalities
+                    .map((m) =>
+                        DropdownMenuItem(value: m, child: Text(m)))
+                    .toList(),
+                onChanged: (val) =>
+                    setState(() => _selectedModality = val!),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
+
               TextFormField(
                 controller: _institutionsController,
-                decoration: const InputDecoration(labelText: 'Institución(es) donde trabajas', border: OutlineInputBorder()),
-                validator: (val) => val == null || val.isEmpty ? 'Requerido' : null,
+                decoration: _fieldDecoration(
+                    'Institución(es) donde trabajas',
+                    icon: Icons.business_outlined),
+                validator: (val) =>
+                    val == null || val.isEmpty ? 'Requerido' : null,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
+
               TextFormField(
                 controller: _businessHoursController,
-                decoration: const InputDecoration(labelText: 'Horario de atención (ej. Lunes a Viernes de 09:00 a 18:00)', border: OutlineInputBorder()),
-                validator: (val) => val == null || val.isEmpty ? 'Requerido' : null,
+                decoration: _fieldDecoration(
+                    'Horario de atención (ej. Lun–Vie 09:00–18:00)',
+                    icon: Icons.schedule_outlined),
+                validator: (val) =>
+                    val == null || val.isEmpty ? 'Requerido' : null,
               ),
-              
-              const SizedBox(height: 32),
-              const Text('Previsiones de Salud (Aseguradoras)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary)),
-              const SizedBox(height: 8),
+
+              const SizedBox(height: 28),
+              _SectionHeader(
+                  icon: Icons.health_and_safety_outlined,
+                  title: 'Previsiones de Salud'),
+              const SizedBox(height: 12),
+
               Wrap(
-                spacing: 8.0,
+                spacing: 8,
+                runSpacing: 8,
                 children: _availableHealthCoverages.map((cov) {
-                  final isSelected = _selectedHealthCoverages.contains(cov);
-                  return FilterChip(
-                    label: Text(cov),
+                  final isSelected =
+                      _selectedHealthCoverages.contains(cov);
+                  return _AppoyoChip(
+                    label: cov,
                     selected: isSelected,
-                    selectedColor: AppColors.primaryLight,
-                    checkmarkColor: AppColors.primary,
-                    onSelected: (bool selected) {
-                      setState(() {
-                        if (selected) {
-                          _selectedHealthCoverages.add(cov);
-                        } else {
-                          _selectedHealthCoverages.remove(cov);
-                        }
-                      });
-                    },
+                    onTap: () => setState(() {
+                      isSelected
+                          ? _selectedHealthCoverages.remove(cov)
+                          : _selectedHealthCoverages.add(cov);
+                    }),
                   );
                 }).toList(),
               ),
 
-              const SizedBox(height: 32),
-              const Text('Condiciones que atiende', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary)),
-              const Text('Puedes elegir varias o ninguna por ahora.', style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
-              const SizedBox(height: 8),
+              const SizedBox(height: 28),
+              _SectionHeader(
+                  icon: Icons.medical_services_outlined,
+                  title: 'Condiciones que atiende'),
+              const SizedBox(height: 4),
+              const Text(
+                'Puedes elegir varias o ninguna por ahora.',
+                style: TextStyle(
+                    fontSize: 12, color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 12),
+
               Wrap(
-                spacing: 8.0,
+                spacing: 8,
+                runSpacing: 8,
                 children: _availableDiagnostics.map((diag) {
-                  final isSelected = _selectedDiagnostics.contains(diag);
-                  return FilterChip(
-                    label: Text(diag),
+                  final isSelected =
+                      _selectedDiagnostics.contains(diag);
+                  return _AppoyoChip(
+                    label: diag,
                     selected: isSelected,
-                    selectedColor: AppColors.primaryLight,
-                    checkmarkColor: AppColors.primary,
-                    onSelected: (bool selected) {
-                      setState(() {
-                        if (selected) {
-                          _selectedDiagnostics.add(diag);
-                        } else {
-                          _selectedDiagnostics.remove(diag);
-                        }
-                      });
-                    },
+                    onTap: () => setState(() {
+                      isSelected
+                          ? _selectedDiagnostics.remove(diag)
+                          : _selectedDiagnostics.add(diag);
+                    }),
                   );
                 }).toList(),
               ),
 
-              const SizedBox(height: 40),
+              const SizedBox(height: 36),
               SizedBox(
                 width: double.infinity,
-                height: 50,
+                height: 52,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
+                    elevation: 0,
+                    textStyle: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   onPressed: _isLoading ? null : _submit,
-                  child: _isLoading 
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('Guardar y Continuar', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 22,
+                          width: 22,
+                          child: CircularProgressIndicator(
+                              color: Colors.white, strokeWidth: 2.5),
+                        )
+                      : const Text('Guardar y Continuar'),
                 ),
-              )
+              ),
+              const SizedBox(height: 24),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  const _SectionHeader({required this.icon, required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 32,
+          height: 32,
+          decoration: const BoxDecoration(
+            color: AppColors.primaryLight,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: AppColors.primary, size: 17),
+        ),
+        const SizedBox(width: 10),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AppoyoChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  const _AppoyoChip(
+      {required this.label, required this.selected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color:
+              selected ? AppColors.primaryLight : AppColors.surface,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color:
+                selected ? AppColors.primary : AppColors.primaryLight,
+            width: 1.5,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight:
+                selected ? FontWeight.w600 : FontWeight.normal,
+            color: selected
+                ? AppColors.primary
+                : AppColors.textSecondary,
           ),
         ),
       ),
