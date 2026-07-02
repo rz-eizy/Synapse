@@ -31,4 +31,8 @@ public interface UserRepository extends JpaRepository<User, UUID>{
            "WHERE u.id = :userId " +
            "GROUP BY u.id, u.username, u.email, u.role, u.accountStatus, u.suspendedUntil, u.statusReason, u.createdAt")
     Optional<AdminAccountDetailDTO> findAccountDetailById(@Param("userId") UUID userId);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @Query(value = "DELETE FROM users WHERE user_id IN (SELECT user_id FROM users WHERE deleted_at IS NOT NULL LIMIT :batchSize)", nativeQuery = true)
+    int hardDeleteDeletedUsersBatch(@Param("batchSize") int batchSize);
 }

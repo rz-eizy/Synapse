@@ -31,6 +31,7 @@ import synapse.api.model.enums.AccountStatus;
 @jakarta.persistence.Table(name = "users")
 @NoArgsConstructor
 @AllArgsConstructor
+@org.hibernate.annotations.SQLRestriction("deleted_at IS NULL")
 public class User {
     @Id
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.UUID) 
@@ -71,6 +72,9 @@ public class User {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(

@@ -79,4 +79,10 @@ public class UserController {
         Page<ProfessionalProfileDTO> favorites = professionalService.getFavoriteProfessionals(principal.getId(), page, size);
         return ResponseEntity.ok(favorites);
     }
+
+    @org.springframework.web.bind.annotation.DeleteMapping("/me")
+    public ResponseEntity<Void> deleteUser(@AuthenticationPrincipal CustomUserDetails principal) {
+        service.softDeleteUser(principal.getId());
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
 }

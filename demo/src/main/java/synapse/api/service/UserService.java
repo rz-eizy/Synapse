@@ -109,4 +109,12 @@ public class UserService {
     public java.util.Optional<User> findById(UUID id) {
         return userRepository.findById(id);
     }
+
+    @Transactional
+    public void softDeleteUser(UUID userId) {
+        User u = userRepository.findById(userId)
+                .orElseThrow(UserNotFound::new);
+        u.setDeletedAt(LocalDateTime.now(clock));
+        userRepository.save(u);
+    }
 }
