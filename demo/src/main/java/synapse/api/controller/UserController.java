@@ -60,6 +60,15 @@ public class UserController {
         return new ResponseEntity<>(u, HttpStatus.OK);
     }
     
+    @PutMapping("/preferences")
+    public ResponseEntity<Void> putUserPreferences(
+        @AuthenticationPrincipal CustomUserDetails principal,
+        @RequestBody synapse.api.dto.UserPreferencesDTO request
+    ) {
+        service.updateUserPreferences(principal.getId(), request.getRegion(), request.getInterestedDiagnostics());
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+    
     @PutMapping("/favorites/{targetUserId}")
     public ResponseEntity<User> postAddFavorite(
         @AuthenticationPrincipal CustomUserDetails principal,

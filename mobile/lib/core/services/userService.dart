@@ -96,4 +96,24 @@ class UserApiService{
       return false;
     }
   }
+
+  Future<bool> updateUserPreferences(String token, String region, String? diagnostics) async {
+    try {
+      final response = await http.put(
+        Uri.parse('${ApiConfig.baseUrl}/user/preferences'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'region': region,
+          'interestedDiagnostics': diagnostics,
+        }),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Error al actualizar preferencias: $e');
+      return false;
+    }
+  }
 }

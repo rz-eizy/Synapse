@@ -22,4 +22,6 @@ public class UserProfileDTO {
     private String rejectedRequestId;
     private String rejectedRequestMotive;
     private boolean professionalOnboarded;
+    private String region;
+    private String interestedDiagnostics;
 }

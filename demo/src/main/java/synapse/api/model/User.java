@@ -60,6 +60,9 @@ public class User {
     @Column(name = "region")
     private String region;
 
+    @Column(name = "interested_diagnostics", columnDefinition = "TEXT")
+    private String interestedDiagnostics;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "account_status", length = 20)
     private AccountStatus accountStatus = AccountStatus.ACTIVE;

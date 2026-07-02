@@ -49,7 +49,6 @@ public class UserService {
         u.setUsername(req.getName());
         u.setEmail(req.getEmail());
         u.setPassword(passwordEncoder.encode(req.getPassword()));
-        u.setRegion("Araucanía");
         u.setCreatedAt(LocalDateTime.now(clock));
         User savedUser = userRepository.save(u);
         return UserDTO.fromEntityMinimal(savedUser);
@@ -64,6 +63,8 @@ public class UserService {
         uProfile.setUsername(u.getUsername());
         uProfile.setProfilePictureUrl(u.getProfilePictureUrl());
         uProfile.setRole(u.getRole());
+        uProfile.setRegion(u.getRegion());
+        uProfile.setInterestedDiagnostics(u.getInterestedDiagnostics());
         var pageable = PageRequest.of(0, 50, Sort.by("createdAt").descending());
         var userPostsPage = publicationRepository.findPublicationByFilters(u.getRegion(), idUser, null, ModerationStatus.APPROVED, pageable);
     
@@ -165,5 +166,16 @@ public class UserService {
         u.setResetOtpExpiration(null);
         
         return true;
+    }
+
+    @Transactional
+    public void updateUserPreferences(UUID id, String region, String diagnostics) {
+        User u = userRepository.findById(id).orElseThrow(UserNotFound::new);
+        if (region != null && !region.isBlank()) {
+            u.setRegion(region);
+        }
+        if (diagnostics != null) {
+            u.setInterestedDiagnostics(diagnostics);
+        }
     }
 }

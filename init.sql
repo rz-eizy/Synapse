@@ -22,7 +22,8 @@ CREATE TABLE IF NOT EXISTS users (
     deleted_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     reset_otp_code VARCHAR(6),
-    reset_otp_expiration TIMESTAMP WITH TIME ZONE
+    reset_otp_expiration TIMESTAMP WITH TIME ZONE,
+    interested_diagnostics TEXT
 );
 
 CREATE TABLE IF NOT EXISTS user_sensitive_data (
@@ -108,20 +109,20 @@ CREATE TABLE IF NOT EXISTS professional_requests (
 
 -- Para probar que se autentique, la clave de cada usuario es: admin
 INSERT INTO users (full_name, email, password_hash, role, region)
-VALUES ('Eloy Prado', 'e.prado02@ufromail.cl', '$2a$10$erhFX6pgiS7js5qzIwuypOU3yRvmBbRkS.WfuExXuhlF5KExVxtoC', 'admin', 'Araucanía');
+VALUES ('Eloy Prado', 'e.prado02@ufromail.cl', '$2a$10$erhFX6pgiS7js5qzIwuypOU3yRvmBbRkS.WfuExXuhlF5KExVxtoC', 'admin', 'La Araucanía');
 
 INSERT INTO users (full_name, email, password_hash, role, region)
-VALUES ('Alesandro Duarte', 'a.duarte02@ufromail.cl', '$2a$10$erhFX6pgiS7js5qzIwuypOU3yRvmBbRkS.WfuExXuhlF5KExVxtoC', 'admin', 'Araucanía');
+VALUES ('Alesandro Duarte', 'a.duarte02@ufromail.cl', '$2a$10$erhFX6pgiS7js5qzIwuypOU3yRvmBbRkS.WfuExXuhlF5KExVxtoC', 'admin', 'La Araucanía');
 
 INSERT INTO users (full_name, email, password_hash, role, region)
-VALUES ('Joaquín Sobarzo', 'j.sobarzo03@ufromail.cl', '$2a$10$erhFX6pgiS7js5qzIwuypOU3yRvmBbRkS.WfuExXuhlF5KExVxtoC', 'admin', 'Araucanía');
+VALUES ('Joaquín Sobarzo', 'j.sobarzo03@ufromail.cl', '$2a$10$erhFX6pgiS7js5qzIwuypOU3yRvmBbRkS.WfuExXuhlF5KExVxtoC', 'admin', 'La Araucanía');
 
 -- Profesionales para pruebas con clave admin
 INSERT INTO users (user_id, full_name, email, password_hash, role, region)
 VALUES 
 ('11111111-1111-1111-1111-111111111111', 'Nathalie Espinoza', 'nathalie@medico.cl', '$2a$10$erhFX6pgiS7js5qzIwuypOU3yRvmBbRkS.WfuExXuhlF5KExVxtoC', 'professional', 'Biobío'),
 ('22222222-2222-2222-2222-222222222222', 'Juan José Roca', 'juan.roca@psicologo.cl', '$2a$10$erhFX6pgiS7js5qzIwuypOU3yRvmBbRkS.WfuExXuhlF5KExVxtoC', 'professional', 'Metropolitana'),
-('33333333-3333-3333-3333-333333333333', 'Siomara Zapata', 'siomara.z@psicologa.cl', '$2a$10$erhFX6pgiS7js5qzIwuypOU3yRvmBbRkS.WfuExXuhlF5KExVxtoC', 'professional', 'Araucanía');
+('33333333-3333-3333-3333-333333333333', 'Siomara Zapata', 'siomara.z@psicologa.cl', '$2a$10$erhFX6pgiS7js5qzIwuypOU3yRvmBbRkS.WfuExXuhlF5KExVxtoC', 'professional', 'La Araucanía');
 
 INSERT INTO professional_profiles (user_id, official_title, institutions, years_experience, session_price, business_hours)
 VALUES 

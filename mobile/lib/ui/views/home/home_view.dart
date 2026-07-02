@@ -176,6 +176,16 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
           );
         }
       }
+
+      if (profileData['region'] == null && mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => const _UserPreferencesDialog(),
+        ).then((_) {
+          _checkUserRole();
+        });
+      }
     }
   }
 
@@ -1325,6 +1335,112 @@ class _NavItemPublishState extends State<_NavItemPublish> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _UserPreferencesDialog extends StatefulWidget {
+  const _UserPreferencesDialog();
+  @override
+  State<_UserPreferencesDialog> createState() => _UserPreferencesDialogState();
+}
+
+class _UserPreferencesDialogState extends State<_UserPreferencesDialog> {
+  String? _selectedRegion;
+  final List<String> _selectedDiagnostics = [];
+  bool _isLoading = false;
+
+  final List<String> _regions = [
+    'Arica y Parinacota', 'Tarapacá', 'Antofagasta', 'Atacama', 'Coquimbo', 'Valparaíso',
+    'Metropolitana', 'O\'Higgins', 'Maule', 'Ñuble', 'Biobío', 'La Araucanía',
+    'Los Ríos', 'Los Lagos', 'Aysén', 'Magallanes'
+  ];
+
+  final List<String> _availableDiagnostics = [
+    'TEA', 'TDAH', 'Dislexia', 'Discalculia', 'Disgrafía', 'Dispraxia',
+    'S. de Tourette', 'Tics', 'TEL', 'Tartamudez', 'T. Comunicación Social',
+    'Disc. Intelectual', 'Altas Capacidades'
+  ];
+
+  Future<void> _submit() async {
+    if (_selectedRegion == null) return;
+    setState(() => _isLoading = true);
+    final storage = const FlutterSecureStorage();
+    final token = await storage.read(key: 'jwt_token') ?? '';
+    final diagnosticsStr = _selectedDiagnostics.join(', ');
+    final success = await UserApiService().updateUserPreferences(token, _selectedRegion!, diagnosticsStr);
+    
+    if (mounted) {
+      setState(() => _isLoading = false);
+      if (success) {
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Error al guardar preferencias')),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.transparent,
+      title: const Text('¡Bienvenido! Completa tu perfil', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Selecciona tu región para ver publicaciones locales (Obligatorio).', style: TextStyle(fontSize: 14)),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              value: _selectedRegion,
+              hint: const Text('Seleccionar Región'),
+              decoration: InputDecoration(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              items: _regions.map((r) => DropdownMenuItem(value: r, child: Text(r))).toList(),
+              onChanged: (val) => setState(() => _selectedRegion = val),
+            ),
+            const SizedBox(height: 20),
+            const Text('¿Qué diagnósticos te interesan? (Opcional)', style: TextStyle(fontSize: 14)),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _availableDiagnostics.map((diag) {
+                final isSelected = _selectedDiagnostics.contains(diag);
+                return FilterChip(
+                  label: Text(diag, style: TextStyle(color: isSelected ? Colors.white : AppColors.textPrimary)),
+                  selected: isSelected,
+                  selectedColor: AppColors.primary,
+                  checkmarkColor: Colors.white,
+                  onSelected: (val) {
+                    setState(() {
+                      if (val) _selectedDiagnostics.add(diag);
+                      else _selectedDiagnostics.remove(diag);
+                    });
+                  },
+                );
+              }).toList(),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        if (_isLoading) const CircularProgressIndicator()
+        else TextButton(
+          style: TextButton.styleFrom(
+            backgroundColor: _selectedRegion != null ? AppColors.primary : Colors.grey,
+            foregroundColor: Colors.white,
+          ),
+          onPressed: _selectedRegion != null ? _submit : null,
+          child: const Text('Guardar'),
+        ),
+      ],
     );
   }
 }
