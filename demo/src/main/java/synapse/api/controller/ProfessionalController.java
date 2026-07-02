@@ -66,6 +66,15 @@ public class ProfessionalController {
     }
     
     @PreAuthorize("hasRole('PROFESSIONAL')")
+    @GetMapping("/me")
+    public ResponseEntity<ProfessionalProfileDTO> getMyProfessionalProfile(
+        @AuthenticationPrincipal CustomUserDetails principal
+    ) {
+        ProfessionalProfileDTO pro = service.findProfessionalById(principal.getId());
+        return ResponseEntity.ok(pro);
+    }
+    
+    @PreAuthorize("hasRole('PROFESSIONAL')")
     @PatchMapping("/me")
     public ResponseEntity<Professional> postEditUserProfile(
         @AuthenticationPrincipal CustomUserDetails principal,

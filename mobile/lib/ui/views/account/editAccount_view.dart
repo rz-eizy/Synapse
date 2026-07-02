@@ -35,6 +35,33 @@ class _EditAccountViewState extends State<EditAccountView>
 
   bool _isProfessional = false;
 
+  final _yearsController = TextEditingController();
+  final _priceController = TextEditingController();
+  final _cityController = TextEditingController();
+  final _businessHoursController = TextEditingController();
+  final _institutionsController = TextEditingController();
+
+  String _selectedRegion = 'Metropolitana';
+  String _selectedModality = 'Presencial';
+
+  final List<String> _regions = [
+    'Arica y Parinacota', 'Tarapacá', 'Antofagasta', 'Atacama', 'Coquimbo', 'Valparaíso',
+    'Metropolitana', 'O\'Higgins', 'Maule', 'Ñuble', 'Biobío', 'La Araucanía',
+    'Los Ríos', 'Los Lagos', 'Aysén', 'Magallanes'
+  ];
+
+  final List<String> _modalities = ['Presencial', 'Online', 'Híbrido'];
+
+  final List<String> _availableHealthCoverages = ['Fonasa', 'Isapre', 'Dipreca', 'Capredena'];
+  final List<String> _selectedHealthCoverages = [];
+
+  final List<String> _availableDiagnostics = [
+    'TEA', 'TDAH', 'Dislexia', 'Discalculia', 'Disgrafía', 'Dispraxia',
+    'S. de Tourette', 'Tics', 'TEL', 'Tartamudez', 'T. Comunicación Social',
+    'Disc. Intelectual', 'Altas Capacidades'
+  ];
+  final List<String> _selectedDiagnostics = [];
+
   @override
   void initState() {
     super.initState();
@@ -63,6 +90,39 @@ class _EditAccountViewState extends State<EditAccountView>
           _handleController.text = profileData['username'] ?? '';
           _isProfessional = profileData['role'] == 'professional';
         });
+
+        if (_isProfessional) {
+          final proData = await _userApiService.getMyProfessionalProfile(token);
+          if (proData != null && mounted) {
+            setState(() {
+              _yearsController.text = (proData['yearsExperience'] ?? '').toString();
+              _priceController.text = (proData['costWork'] ?? '').toString();
+              _cityController.text = proData['city'] ?? '';
+              _businessHoursController.text = proData['businessHours'] ?? '';
+              _institutionsController.text = proData['institutions'] ?? '';
+              
+              if (proData['workRegion'] != null && _regions.contains(proData['workRegion'])) {
+                _selectedRegion = proData['workRegion'];
+              }
+              if (proData['modality'] != null && _modalities.contains(proData['modality'])) {
+                _selectedModality = proData['modality'];
+              }
+              
+              if (proData['healthCoverage'] != null) {
+                _selectedHealthCoverages.clear();
+                _selectedHealthCoverages.addAll(
+                  proData['healthCoverage'].toString().split(',').map((e) => e.trim()).where((e) => e.isNotEmpty)
+                );
+              }
+              if (proData['treatedDiagnostics'] != null) {
+                _selectedDiagnostics.clear();
+                _selectedDiagnostics.addAll(
+                  proData['treatedDiagnostics'].toString().split(',').map((e) => e.trim()).where((e) => e.isNotEmpty)
+                );
+              }
+            });
+          }
+        }
       }
     } catch (e) {
       debugPrint('Error cargando perfil: $e');
@@ -80,6 +140,11 @@ class _EditAccountViewState extends State<EditAccountView>
     _bioController.dispose();
     _emailController.dispose();
     _fadeController.dispose();
+    _yearsController.dispose();
+    _priceController.dispose();
+    _cityController.dispose();
+    _businessHoursController.dispose();
+    _institutionsController.dispose();
     super.dispose();
   }
 
@@ -133,12 +198,31 @@ class _EditAccountViewState extends State<EditAccountView>
         }
       }
 
-      bool success = await _userApiService.updateProfile(
-        token,
-        handle,
-        finalImageUrl,
-        "Araucanía",
-      );
+      bool success;
+      if (_isProfessional) {
+        final data = {
+          'username': handle,
+          'profilePicture': finalImageUrl,
+          'description': _bioController.text,
+          'yearsExperience': int.tryParse(_yearsController.text) ?? 0,
+          'institutions': _institutionsController.text,
+          'businessHours': _businessHoursController.text,
+          'costWork': int.tryParse(_priceController.text) ?? 0,
+          'workRegion': _selectedRegion,
+          'city': _cityController.text,
+          'modality': _selectedModality,
+          'healthCoverage': _selectedHealthCoverages.join(', '),
+          'treatedDiagnostics': _selectedDiagnostics.join(', ')
+        };
+        success = await _userApiService.updateProfessionalProfile(token, data);
+      } else {
+        success = await _userApiService.updateProfile(
+          token,
+          handle,
+          finalImageUrl,
+          "Araucanía",
+        );
+      }
 
       if (mounted) {
         if (success) {
@@ -318,6 +402,124 @@ class _EditAccountViewState extends State<EditAccountView>
                         maxLines: 3,
                       ),
                       const SizedBox(height: 36),
+
+                      if (_isProfessional) ...[
+                        const Text('Información Profesional', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary)),
+                        const SizedBox(height: 16),
+                        _CustomInputField(
+                          label: 'Años de experiencia',
+                          controller: _yearsController,
+                          icon: Icons.access_time_rounded,
+                          keyboardType: TextInputType.number,
+                          validator: (val) => val == null || val.isEmpty ? 'Requerido' : null,
+                        ),
+                        const SizedBox(height: 16),
+                        _CustomInputField(
+                          label: 'Precio por sesión (0 si es gratis)',
+                          controller: _priceController,
+                          icon: Icons.attach_money_rounded,
+                          keyboardType: TextInputType.number,
+                          validator: (val) => val == null || val.isEmpty ? 'Requerido' : null,
+                        ),
+                        const SizedBox(height: 32),
+                        const Text('Ubicación y Modalidad', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary)),
+                        const SizedBox(height: 16),
+                        DropdownButtonFormField<String>(
+                          value: _selectedRegion,
+                          decoration: InputDecoration(
+                            labelText: 'Región de trabajo',
+                            prefixIcon: const Icon(Icons.map_rounded, color: AppColors.primary, size: 20),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+                            filled: true,
+                            fillColor: Colors.white,
+                          ),
+                          items: _regions.map((r) => DropdownMenuItem(value: r, child: Text(r))).toList(),
+                          onChanged: (val) => setState(() => _selectedRegion = val!),
+                        ),
+                        const SizedBox(height: 16),
+                        _CustomInputField(
+                          label: 'Ciudad',
+                          controller: _cityController,
+                          icon: Icons.location_city_rounded,
+                          validator: (val) => val == null || val.isEmpty ? 'Requerido' : null,
+                        ),
+                        const SizedBox(height: 16),
+                        DropdownButtonFormField<String>(
+                          value: _selectedModality,
+                          decoration: InputDecoration(
+                            labelText: 'Modalidad de atención',
+                            prefixIcon: const Icon(Icons.laptop_chromebook_rounded, color: AppColors.primary, size: 20),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+                            filled: true,
+                            fillColor: Colors.white,
+                          ),
+                          items: _modalities.map((m) => DropdownMenuItem(value: m, child: Text(m))).toList(),
+                          onChanged: (val) => setState(() => _selectedModality = val!),
+                        ),
+                        const SizedBox(height: 16),
+                        _CustomInputField(
+                          label: 'Institución(es) donde trabajas',
+                          controller: _institutionsController,
+                          icon: Icons.business_rounded,
+                          validator: (val) => val == null || val.isEmpty ? 'Requerido' : null,
+                        ),
+                        const SizedBox(height: 16),
+                        _CustomInputField(
+                          label: 'Horario de atención',
+                          controller: _businessHoursController,
+                          icon: Icons.schedule_rounded,
+                          validator: (val) => val == null || val.isEmpty ? 'Requerido' : null,
+                        ),
+                        const SizedBox(height: 32),
+                        const Text('Previsiones de Salud', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary)),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8.0,
+                          children: _availableHealthCoverages.map((cov) {
+                            final isSelected = _selectedHealthCoverages.contains(cov);
+                            return FilterChip(
+                              label: Text(cov),
+                              selected: isSelected,
+                              selectedColor: AppColors.primaryLight,
+                              checkmarkColor: AppColors.primary,
+                              onSelected: (bool selected) {
+                                setState(() {
+                                  if (selected) {
+                                    _selectedHealthCoverages.add(cov);
+                                  } else {
+                                    _selectedHealthCoverages.remove(cov);
+                                  }
+                                });
+                              },
+                            );
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 32),
+                        const Text('Condiciones que atiende', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary)),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8.0,
+                          children: _availableDiagnostics.map((diag) {
+                            final isSelected = _selectedDiagnostics.contains(diag);
+                            return FilterChip(
+                              label: Text(diag),
+                              selected: isSelected,
+                              selectedColor: AppColors.primaryLight,
+                              checkmarkColor: AppColors.primary,
+                              onSelected: (bool selected) {
+                                setState(() {
+                                  if (selected) {
+                                    _selectedDiagnostics.add(diag);
+                                  } else {
+                                    _selectedDiagnostics.remove(diag);
+                                  }
+                                });
+                              },
+                            );
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 36),
+                      ],
 
                       if (!_isProfessional) ...[
                         GestureDetector(

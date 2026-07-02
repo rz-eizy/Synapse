@@ -80,6 +80,23 @@ class UserApiService{
     }
   }
 
+  Future<Map<String, dynamic>?> getMyProfessionalProfile(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConfig.baseUrl}/professional/me'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      }
+    } catch (e) {
+      print('Error obteniendo perfil profesional: $e');
+    }
+    return null;
+  }
+
   Future<bool> updateProfessionalProfile(String token, Map<String, dynamic> data) async {
     try {
       final response = await http.patch(
