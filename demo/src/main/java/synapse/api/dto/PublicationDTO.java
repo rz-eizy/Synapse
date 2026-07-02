@@ -12,7 +12,7 @@ import synapse.api.model.Publication;
 @NoArgsConstructor
 public class PublicationDTO {
     @NotBlank
-    @Size(max = 1000)
+    @Size(max = 250)
     private String content;
     
     @NotBlank 
