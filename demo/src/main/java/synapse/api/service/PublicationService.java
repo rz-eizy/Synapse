@@ -21,6 +21,7 @@ import synapse.api.model.Publication;
 import synapse.api.model.User;
 import synapse.api.model.enums.ModerationStatus;
 import synapse.api.model.event.PublicationImagePendingEvent;
+import synapse.api.model.event.PublicationTextPedingEvent;
 import synapse.api.repository.PublicationRepository;
 import synapse.api.repository.UserRepository;
 
@@ -53,22 +54,22 @@ public class PublicationService {
         publication.setRegionTag(dto.getRegionTag());
         publication.setCreatedAt(LocalDateTime.now(clock));
         publication.setAuthor(author);
+        publication.setModerationStatus(ModerationStatus.APPROVED);
 
         boolean wantsToAttachPhoto = dto.getImageUrl() != null && !dto.getImageUrl().isBlank();
-        if (wantsToAttachPhoto) {
+        if (wantsToAttachPhoto){
             if (!PROFESSIONAL_ROLE.equalsIgnoreCase(author.getRole())) {
                 throw new PhotoUploadNotAllowedException();
             }
             publication.setImageUrl(dto.getImageUrl());
-            publication.setModerationStatus(ModerationStatus.PENDING);
-            Publication saved = repository.save(publication);
+        } 
+        Publication saved = repository.save(publication);
+        eventPublisher.publishEvent(new PublicationTextPedingEvent(publication.getId(), publication.getContent()));
 
+        if (wantsToAttachPhoto){
             eventPublisher.publishEvent(new PublicationImagePendingEvent(saved.getId(), saved.getImageUrl()));
-            return saved;
-        } else {
-            publication.setModerationStatus(ModerationStatus.APPROVED);
-            return repository.save(publication);
         }
+        return saved;
     }
 
     public Page<Publication> getFilteredPublications(String regionTag, UUID authorId, Boolean hasPhoto,int page, int size){
