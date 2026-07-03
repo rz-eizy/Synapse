@@ -16,6 +16,10 @@ public interface ReportRepository extends JpaRepository<Report, UUID> {
 
     long countByResolvedTrueAndResolvedAtBetween(LocalDateTime start, LocalDateTime end);
 
+    long countByPublicationIdAndResolvedFalse(UUID publicationId);
+
+    long countByCommentIdAndResolvedFalse(UUID commentId);
+
     @Query("SELECT new synapse.api.dto.admin.ReportDetailDTO(r.id, r.type, r.description, r.createdAt, u.username, r.resolved) " +
            "FROM Report r JOIN r.reporter u WHERE r.publication.id = :publicationId ORDER BY r.createdAt DESC")
     List<ReportDetailDTO> findReportDetailsByPublicationId(@Param("publicationId") UUID publicationId);

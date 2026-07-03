@@ -32,8 +32,11 @@ public interface PublicationRepository extends JpaRepository<Publication, UUID>{
 
     long countByModerationStatus(ModerationStatus status);
 
-    @Query("SELECT p FROM Publication p JOIN FETCH p.author " +
-        "WHERE (:status IS NULL OR p.moderationStatus = :status) " +
+    @Query("SELECT COUNT(DISTINCT p) FROM Publication p WHERE p.moderationStatus = synapse.api.model.enums.ModerationStatus.PENDING OR EXISTS (SELECT 1 FROM Report r WHERE r.publication = p AND r.resolved = false)")
+    long countPendingPublications();
+
+    @Query("SELECT DISTINCT p FROM Publication p JOIN FETCH p.author " +
+        "WHERE (:status IS NULL OR p.moderationStatus = :status OR ( :status = synapse.api.model.enums.ModerationStatus.PENDING AND EXISTS (SELECT 1 FROM Report r WHERE r.publication = p AND r.resolved = false) )) " +
         "AND (:type IS NULL OR EXISTS (SELECT 1 FROM Report r WHERE r.publication = p AND r.type = :type))")
     Page<Publication> findForModeration(
         @Param("status") ModerationStatus status,

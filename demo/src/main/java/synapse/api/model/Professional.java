@@ -32,10 +32,10 @@ public class Professional {
     @Id
     private UUID id;
 
-    @Column(name = "official_title", nullable = false)
+    @Column(name = "official_title")
     private String professionName;
 
-    @Column(name = "institutions", nullable = false)
+    @Column(name = "institutions")
     private String institutions;
 
     @Column(name = "external_contact_link")

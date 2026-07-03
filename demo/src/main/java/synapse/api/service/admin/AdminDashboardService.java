@@ -39,8 +39,8 @@ public class AdminDashboardService {
 
     @Transactional(readOnly = true)
     public AdminDashboardStatsDTO getStats() {
-        long pendingPosts = publicationRepository.countByModerationStatus(ModerationStatus.PENDING);
-        long pendingComments = commentRepository.countByModerationStatus(ModerationStatus.PENDING);
+        long pendingPosts = publicationRepository.countPendingPublications();
+        long pendingComments = commentRepository.countPendingComments();
         long pendingAccounts = professionalRequestRepository.countByStatus(RequestStatus.PENDING);
 
         LocalDateTime startOfDay = LocalDate.now(clock).atStartOfDay();

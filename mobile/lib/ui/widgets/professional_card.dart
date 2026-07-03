@@ -56,18 +56,27 @@ class _ProfessionalCardState extends State<ProfessionalCard> {
     );
   }
 
-  void _openReportSheet() {
-    showDialog(
+  bool _isHidden = false;
+
+  void _openReportSheet() async {
+    final result = await showDialog<bool>(
       context: context,
       builder: (_) => _PublicationReportDialog(
         publicationAuthor: widget.name,
         publicationPreview: widget.description,
       ),
     );
+    if (result == true) {
+      setState(() {
+        _isHidden = true;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isHidden) return const SizedBox.shrink();
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
@@ -520,7 +529,7 @@ class _PublicationReportDialogState
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14)),
             ),
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(context, true),
             child: const Text('Cerrar',
                 style: TextStyle(fontWeight: FontWeight.w600)),
           ),

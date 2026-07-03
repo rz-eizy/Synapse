@@ -67,21 +67,28 @@ public class ReportService {
         
         if (dto.getIdPublication() != null) {
             Publication pub = publicationRepository.findById(dto.getIdPublication()).orElseThrow(PublicationNotFound::new);
-            pub.setModerationStatus(synapse.api.model.enums.ModerationStatus.PENDING);
             report.setPublication(pub);
-        }
-
-        if (dto.getIdReportedUser() != null) {
+            reportRepository.save(report);
+            long count = reportRepository.countByPublicationIdAndResolvedFalse(pub.getId());
+            if (count >= 5) {
+                pub.setModerationStatus(synapse.api.model.enums.ModerationStatus.PENDING);
+                publicationRepository.save(pub);
+            }
+        } else if (dto.getIdReportedUser() != null) {
             User reportedU = userRepository.findById(dto.getIdReportedUser()).orElseThrow(UserNotFound::new);
             report.setReportedUser(reportedU);
+            reportRepository.save(report);
+        } else if (dto.getIdComment() != null) {
+            Comment com = commentRepository.findById(dto.getIdComment()).orElseThrow(CommentNotFound::new);
+            report.setComment(com);
+            reportRepository.save(report);
+            long count = reportRepository.countByCommentIdAndResolvedFalse(com.getId());
+            if (count >= 5) {
+                com.setModerationStatus(synapse.api.model.enums.ModerationStatus.PENDING);
+                commentRepository.save(com);
+            }
         }
 
-        if (dto.getIdComment() != null) {
-            Comment com = commentRepository.findById(dto.getIdComment()).orElseThrow(CommentNotFound::new);
-            com.setModerationStatus(synapse.api.model.enums.ModerationStatus.PENDING);
-            report.setComment(com);
-        }
-        reportRepository.save(report);
         return report;
     }
 }

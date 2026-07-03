@@ -24,8 +24,11 @@ public interface CommentRepository extends JpaRepository<Comment, UUID>{
 
     long countByModerationStatus(ModerationStatus status);
 
-    @Query("SELECT c FROM Comment c JOIN FETCH c.author " +
-        "WHERE (:status IS NULL OR c.moderationStatus = :status) " +
+    @Query("SELECT COUNT(DISTINCT c) FROM Comment c WHERE c.moderationStatus = synapse.api.model.enums.ModerationStatus.PENDING OR EXISTS (SELECT 1 FROM Report r WHERE r.comment = c AND r.resolved = false)")
+    long countPendingComments();
+
+    @Query("SELECT DISTINCT c FROM Comment c JOIN FETCH c.author " +
+        "WHERE (:status IS NULL OR c.moderationStatus = :status OR ( :status = synapse.api.model.enums.ModerationStatus.PENDING AND EXISTS (SELECT 1 FROM Report r WHERE r.comment = c AND r.resolved = false) )) " +
         "AND (:type IS NULL OR EXISTS (SELECT 1 FROM Report r WHERE r.comment = c AND r.type = :type))")
     Page<Comment> findForModeration(
         @Param("status") ModerationStatus status,

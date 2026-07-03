@@ -121,11 +121,16 @@ class _CommentsSheetState extends State<CommentsSheet> {
     }
   }
 
-  void _showReportDialog(AppComment comment) {
-    showDialog(
+  void _showReportDialog(AppComment comment) async {
+    final result = await showDialog<bool>(
       context: context,
       builder: (_) => _ReportDialog(comment: comment),
     );
+    if (result == true) {
+      setState(() {
+        _comments.removeWhere((c) => c.id == comment.id);
+      });
+    }
   }
 
   @override
@@ -707,7 +712,7 @@ class _ReportDialogState extends State<_ReportDialog> {
                 borderRadius: BorderRadius.circular(14),
               ),
             ),
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(context, true),
             child: const Text(
               'Cerrar',
               style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
