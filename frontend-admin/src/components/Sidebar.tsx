@@ -5,7 +5,6 @@ interface NavItem {
   to: string
   icon: string
   label: string
-  badge?: number
 }
 
 const mainNav: NavItem[] = [
@@ -13,12 +12,12 @@ const mainNav: NavItem[] = [
 ]
 
 const moderationNav: NavItem[] = [
-  { to: '/comentarios', icon: '💬', label: 'Comentarios', badge: 5 },
-  { to: '/comunidad', icon: '👥', label: 'Posts Comunidad', badge: 4 },
-  { to: '/profesionales', icon: '🏥', label: 'Posts Profesionales', badge: 3 },
-  { to: '/reportesprofesionales', icon: '🚩', label: 'Reportes Profesionales', badge: 1 },
+  { to: '/comentarios', icon: '💬', label: 'Comentarios' },
+  { to: '/comunidad', icon: '👥', label: 'Posts Comunidad' },
+  { to: '/profesionales', icon: '🏥', label: 'Posts Profesionales' },
+  { to: '/reportesprofesionales', icon: '🚩', label: 'Reportes Profesionales' },
   { to: '/solicitudes-profesionales', icon: '🎓', label: 'Ascensos a Profesional' },
-  { to: '/cuentas', icon: '👤', label: 'Cuentas', badge: 2 },
+  { to: '/cuentas', icon: '👤', label: 'Cuentas' },
 ]
 
 export function Sidebar() {
@@ -54,9 +53,6 @@ export function Sidebar() {
             >
               <span className={styles.navIcon}>{item.icon}</span>
               <span className={styles.navLabel}>{item.label}</span>
-              {item.badge !== undefined && item.badge > 0 && (
-                <span className={styles.navBadge}>{item.badge}</span>
-              )}
             </NavLink>
           ))}
         </div>
