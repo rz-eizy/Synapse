@@ -17,7 +17,7 @@ import synapse.api.model.User;
 
 public class CustomUserDetails implements UserDetails {
     private static final Clock clock = Clock.system(ZoneId.of("America/Santiago"));
-    private transient User user;
+    private User user;
 
     public CustomUserDetails(User user) {
         this.user = user;
