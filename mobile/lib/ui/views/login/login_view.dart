@@ -71,7 +71,9 @@ class _LoginViewState extends State<LoginView> with SingleTickerProviderStateMix
         }
       } else {
         String errorMessage = 'Error al iniciar sesión (${response.statusCode})';
-        if (response.body.isNotEmpty) {
+        if (response.statusCode == 401 || response.statusCode == 403) {
+          errorMessage = 'Contraseña o usuario incorrectos';
+        } else if (response.body.isNotEmpty) {
           try {
             final dynamic responseData = jsonDecode(response.body);
             if (responseData is Map<String, dynamic>) {
