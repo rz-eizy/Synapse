@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import '../../../core/constants.dart';
 import '../../../core/theme/app_colors.dart';
 import 'dart:convert';
@@ -71,9 +72,7 @@ class _LoginViewState extends State<LoginView> with SingleTickerProviderStateMix
         }
       } else {
         String errorMessage = 'Error al iniciar sesión (${response.statusCode})';
-        if (response.statusCode == 401 || response.statusCode == 403) {
-          errorMessage = 'Contraseña o usuario incorrectos';
-        } else if (response.body.isNotEmpty) {
+        if (response.body.isNotEmpty) {
           try {
             final dynamic responseData = jsonDecode(response.body);
             if (responseData is Map<String, dynamic>) {
@@ -227,6 +226,56 @@ class _LoginViewState extends State<LoginView> with SingleTickerProviderStateMix
             child: const Text('Restablecer'),
           ),
         ],
+      ),
+    );
+  }
+
+  Future<void> _showTermsDialog() async {
+    await showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480, maxHeight: 600),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Términos y Condiciones de Appoyo',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFF1E1B4B)),
+                ),
+                const SizedBox(height: 16),
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: Text(
+                      _AppoyoTerms.content,
+                      style: const TextStyle(fontSize: 13.5, color: Color(0xFF4A4660), height: 1.5),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                    child: const Text('Entendido'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -397,12 +446,24 @@ class _LoginViewState extends State<LoginView> with SingleTickerProviderStateMix
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: RichText(
                         textAlign: TextAlign.center,
-                        text: const TextSpan(
-                          style: TextStyle(
+                        text: TextSpan(
+                          style: const TextStyle(
                             fontSize: 13,
                             color: Color(0xFF6B6687),
                             height: 1.5,
                           ),
+                          children: [
+                            const TextSpan(text: 'Al iniciar sesión estás aceptando nuestros '),
+                            TextSpan(
+                              text: 'Términos y Condiciones',
+                              style: const TextStyle(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              recognizer: TapGestureRecognizer()..onTap = _showTermsDialog,
+                            ),
+                            const TextSpan(text: '.'),
+                          ],
                         ),
                       ),
                     ),
@@ -415,6 +476,47 @@ class _LoginViewState extends State<LoginView> with SingleTickerProviderStateMix
       ),
     );
   }
+}
+
+// Contenido de los Términos y Condiciones de Appoyo
+class _AppoyoTerms {
+  static const String content = '''
+1. Aceptación de los términos
+Al utilizar Appoyo aceptas estos Términos y Condiciones y nuestra Política de Privacidad. Si no estás de acuerdo, por favor no utilices la aplicación.
+
+2. Descripción del servicio
+Appoyo es una red de apoyo que conecta a tutores de niños, niñas y adolescentes con Trastorno del Espectro Autista (TEA) con otras familias y con profesionales del área, con el fin de compartir experiencias, orientación y contención dentro de una comunidad.
+
+3. Naturaleza del servicio
+Appoyo no reemplaza la atención médica, terapéutica ni profesional. La información compartida en la comunidad tiene fines de apoyo y orientación, y no constituye diagnóstico ni tratamiento clínico.
+
+4. Registro y cuentas
+Debes proporcionar información veraz al crear tu cuenta. Eres responsable de mantener la confidencialidad de tus credenciales y de la actividad realizada desde tu cuenta.
+
+5. Perfiles de profesionales
+Los profesionales que se registran en Appoyo declaran contar con las credenciales y habilitaciones correspondientes. Appoyo puede verificar esta información, pero no garantiza la idoneidad de cada profesional; se recomienda a los usuarios validar credenciales de forma independiente.
+
+6. Uso adecuado de la plataforma
+Te comprometes a interactuar con respeto, evitando contenido discriminatorio, ofensivo, engañoso o que vulnere la privacidad de otros usuarios, en especial de niños, niñas y adolescentes.
+
+7. Contenido generado por usuarios
+Eres responsable del contenido que publicas (comentarios, publicaciones, reportes). Appoyo puede moderar, ocultar o eliminar contenido que infrinja estos Términos.
+
+8. Privacidad y datos personales
+Appoyo trata tus datos personales conforme a la legislación vigente en Chile, incluyendo la Ley N° 21.719. Puedes ejercer tus derechos de acceso, rectificación, cancelación y oposición sobre tus datos.
+
+9. Menores de edad
+La aplicación está dirigida a tutores y profesionales adultos. La información sobre menores solo debe ser ingresada por su tutor legal, con fines de coordinación de apoyo.
+
+10. Suspensión de cuentas
+Appoyo puede suspender o eliminar cuentas que incumplan estos Términos o que representen un riesgo para la comunidad.
+
+11. Modificaciones
+Estos Términos pueden actualizarse periódicamente. Te notificaremos los cambios relevantes dentro de la aplicación.
+
+12. Contacto
+Si tienes dudas sobre estos Términos y Condiciones, puedes contactarnos a través de los canales de soporte disponibles en la aplicación.
+''';
 }
 
 // LogoAppoyo libre de contenedores rígidos

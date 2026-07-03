@@ -384,7 +384,7 @@ class _ActionButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         child: Row(
           children: [
-            Icon(icon, size: 18, color: AppColors.textMuted),
+            Icon(icon, size: 23, color: AppColors.textMuted),
             const SizedBox(width: 5),
             Text(
               '$count',
@@ -428,7 +428,7 @@ class _LikeButton extends StatelessWidget {
               child: Icon(
                 liked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
                 key: ValueKey(liked),
-                size: 18,
+                size: 23,
                 color: liked ? const Color(0xFFE74C3C) : AppColors.textMuted,
               ),
             ),
