@@ -46,6 +46,7 @@ class _ProfessionalCardState extends State<ProfessionalCard> {
         onCommentAdded: (String textContent) async {
           final newComment = AppComment(
             author: 'Tú',
+            authorRole: 'regular',
             text: textContent,
             time: 'ahora',
           );

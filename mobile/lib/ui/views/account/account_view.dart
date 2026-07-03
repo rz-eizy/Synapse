@@ -33,8 +33,9 @@ class _AccountViewState extends State<AccountView>
   final _storage = const FlutterSecureStorage();
 
   bool _isLoading = true;
-  String _username = '';
+  String _username = 'Usuario';
   String _profileImageUrl = '';
+  String _userRole = 'regular';
   List<_PostPreview> _userPosts = [];
 
   late final AnimationController _fadeController;
@@ -69,6 +70,12 @@ class _AccountViewState extends State<AccountView>
         _username = profileData['username'] ?? 'Usuario';
         _profileImageUrl = profileData['profilePictureUrl'] ?? '';
         _isProfessional = profileData['role'] == 'professional';
+        
+        if (_isProfessional && profileData['professional'] != null && profileData['professional']['professionName'] != null) {
+          _userRole = profileData['professional']['professionName'];
+        } else {
+          _userRole = profileData['role'] ?? 'regular';
+        }
 
         _userPosts = publicationsJson
             .map(
@@ -142,6 +149,7 @@ class _AccountViewState extends State<AccountView>
                   SliverToBoxAdapter(
                     child: _ProfileHeader(
                       username: _username,
+                      userRole: _userRole,
                       profileImageUrl: _profileImageUrl,
                       postCount: _userPosts.length,
                       isProfessional: _isProfessional,
@@ -216,12 +224,14 @@ class _AccountViewState extends State<AccountView>
 // ── Header de perfil ──────────────────────────────────────────────────────────
 class _ProfileHeader extends StatelessWidget {
   final String username;
+  final String userRole;
   final String profileImageUrl;
   final int postCount;
   final bool isProfessional;
 
   const _ProfileHeader({
     required this.username,
+    required this.userRole,
     required this.profileImageUrl,
     required this.postCount,
     required this.isProfessional,
@@ -282,7 +292,7 @@ class _ProfileHeader extends StatelessWidget {
           ),
           const SizedBox(height: 2),
           Text(
-            '@${username.replaceAll(' ', '').toLowerCase()}',
+            '@${userRole.toLowerCase()}',
             style: const TextStyle(
               fontSize: 13,
               color: AppColors.primary,
@@ -633,6 +643,7 @@ class _PostDetailSheetState extends State<_PostDetailSheet> {
       widget.initialCommentCount,
       (i) => AppComment(
         author: 'Usuario ${i + 1}',
+        authorRole: 'regular',
         text: 'Comentario de ejemplo ${i + 1}',
         time: 'hace ${i + 1}h',
       ),
@@ -657,6 +668,7 @@ class _PostDetailSheetState extends State<_PostDetailSheet> {
         onCommentAdded: (String textContent) async {
           final newComment = AppComment(
             author: 'Tú',
+            authorRole: 'regular',
             text: textContent,
             time: 'ahora',
           );

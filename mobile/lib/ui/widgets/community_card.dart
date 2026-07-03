@@ -10,6 +10,7 @@ import '../../core/services/reportService.dart';
 class CommunityCard extends StatefulWidget {
   final String? id;
   final String userName;
+  final String userRole;
   final String userImageUrl;
   final String date;
   final String content;
@@ -22,6 +23,7 @@ class CommunityCard extends StatefulWidget {
     super.key,
     this.id,
     required this.userName,
+    required this.userRole,
     required this.userImageUrl,
     required this.date,
     required this.content,
@@ -98,6 +100,7 @@ class _CommunityCardState extends State<CommunityCard> {
       return AppComment(
         id: c.id,
         author: c.authorName,
+        authorRole: c.authorRole,
         text: c.content,
         time: 'hace poco',
         imageUrl: c.authorImageUrl,
@@ -188,6 +191,15 @@ class _CommunityCardState extends State<CommunityCard> {
                           fontSize: 14,
                           color: AppColors.textPrimary,
                           letterSpacing: -0.1,
+                        ),
+                      ),
+                      const SizedBox(height: 1),
+                      Text(
+                        '@${widget.userRole.toLowerCase()}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                       const SizedBox(height: 1),

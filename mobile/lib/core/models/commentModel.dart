@@ -2,6 +2,7 @@ class CommentModel {
   final String? id;
   final String content;
   final String authorName;
+  final String authorRole;
   final DateTime createdAt;
   final String? authorImageUrl;
 
@@ -9,6 +10,7 @@ class CommentModel {
     this.id,
     required this.content,
     required this.authorName,
+    required this.authorRole,
     required this.createdAt,
     required this.authorImageUrl
   });
@@ -20,6 +22,9 @@ class CommentModel {
       id: json['id']?.toString(),
       content: json['content'] ?? '',
       authorName: authorJson?['username'] ?? json['authorName'] ?? 'Usuario',
+      authorRole: (authorJson?['role'] == 'professional' && authorJson?['professional'] != null && authorJson!['professional']['professionName'] != null)
+          ? authorJson['professional']['professionName']
+          : (authorJson?['role'] ?? json['authorRole'] ?? 'regular'),
       authorImageUrl: authorJson?['profilePictureUrl'] ?? json['authorProfilePicture'] ?? '',
       createdAt: json['createdAt'] != null 
           ? DateTime.parse(json['createdAt']) 
