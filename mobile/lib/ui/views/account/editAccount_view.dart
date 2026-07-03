@@ -39,6 +39,7 @@ class _EditAccountViewState extends State<EditAccountView>
   final _cityController = TextEditingController();
   final _businessHoursController = TextEditingController();
   final _institutionsController = TextEditingController();
+  final _contactLinkController = TextEditingController();
 
   String _selectedRegion = 'Metropolitana';
   String _selectedModality = 'Presencial';
@@ -96,8 +97,15 @@ class _EditAccountViewState extends State<EditAccountView>
               _yearsController.text = (proData['yearsExperience'] ?? '').toString();
               _priceController.text = (proData['costWork'] ?? '').toString();
               _cityController.text = proData['city'] ?? '';
-              _businessHoursController.text = proData['businessHours'] ?? '';
               _institutionsController.text = proData['institutions'] ?? '';
+              
+              String loadedLink = proData['externalContactLink'] ?? '';
+              if (loadedLink.startsWith('https://wa.me/')) {
+                loadedLink = loadedLink.replaceFirst('https://wa.me/', '+');
+              } else if (loadedLink.startsWith('https://instagram.com/')) {
+                loadedLink = loadedLink.replaceFirst('https://instagram.com/', '@');
+              }
+              _contactLinkController.text = loadedLink;
               
               if (proData['workRegion'] != null && _regions.contains(proData['workRegion'])) {
                 _selectedRegion = proData['workRegion'];
@@ -154,6 +162,7 @@ class _EditAccountViewState extends State<EditAccountView>
     _cityController.dispose();
     _businessHoursController.dispose();
     _institutionsController.dispose();
+    _contactLinkController.dispose();
     super.dispose();
   }
 
@@ -209,6 +218,19 @@ class _EditAccountViewState extends State<EditAccountView>
 
       bool success;
       if (_isProfessional) {
+        String contact = _contactLinkController.text.trim();
+        String finalLink = contact;
+        if (contact.isNotEmpty && !contact.startsWith('http')) {
+          final isPhone = RegExp(r'^[\+\d\s\-]+$').hasMatch(contact);
+          if (isPhone) {
+            final number = contact.replaceAll(RegExp(r'\D'), '');
+            finalLink = 'https://wa.me/$number';
+          } else {
+            final username = contact.replaceAll('@', '');
+            finalLink = 'https://instagram.com/$username';
+          }
+        }
+
         final data = {
           'username': name,
           'profilePicture': finalImageUrl,
@@ -221,7 +243,8 @@ class _EditAccountViewState extends State<EditAccountView>
           'city': _cityController.text,
           'modality': _selectedModality,
           'healthCoverage': _selectedHealthCoverages.join(', '),
-          'treatedDiagnostics': _selectedDiagnostics.join(', ')
+          'treatedDiagnostics': _selectedDiagnostics.join(', '),
+          'personalContact': finalLink,
         };
         success = await _userApiService.updateProfessionalProfile(token, data);
       } else {
@@ -572,6 +595,13 @@ class _EditAccountViewState extends State<EditAccountView>
                           controller: _businessHoursController,
                           icon: Icons.schedule_rounded,
                           validator: (val) => val == null || val.isEmpty ? 'Requerido' : null,
+                        ),
+                        const SizedBox(height: 16),
+                        _CustomInputField(
+                          label: 'WhatsApp (número) o Instagram (usuario)',
+                          controller: _contactLinkController,
+                          icon: Icons.link_rounded,
+                          keyboardType: TextInputType.text,
                         ),
                         const SizedBox(height: 32),
                         const Text('Previsiones de Salud', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary)),

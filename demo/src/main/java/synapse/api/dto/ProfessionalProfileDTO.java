@@ -24,4 +24,5 @@ public class ProfessionalProfileDTO {
     
     private Double averageStars;      
     private Long totalReviews;
+    private String externalContactLink;
 }

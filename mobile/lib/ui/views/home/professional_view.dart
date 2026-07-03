@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/services/professionalService.dart';
 
@@ -16,6 +17,7 @@ class _Professional {
   final String city;
   final String businessHours;
   final String description;
+  final String externalContactLink;
 
   const _Professional({
     required this.id,
@@ -29,6 +31,7 @@ class _Professional {
     this.city = '',
     this.businessHours = '',
     this.description = '',
+    this.externalContactLink = '',
   });
 
   factory _Professional.fromJson(Map<String, dynamic> json) {
@@ -50,6 +53,7 @@ class _Professional {
       city: json['city'] ?? '',
       businessHours: json['businessHours'] ?? '',
       description: json['professionalDescription'] ?? 'Sin descripción profesional',
+      externalContactLink: json['externalContactLink'] ?? '',
     );
   }
 }
@@ -778,6 +782,53 @@ class _ProfessionalDetailViewState extends State<ProfessionalDetailView> {
                 ),
               ),
             ),
+            const SizedBox(height: 40),
+            
+            // Botón de Mensaje Directo
+            if (p.externalContactLink.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      final url = Uri.parse(p.externalContactLink);
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(url, mode: LaunchMode.externalApplication);
+                      } else {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('No se pudo abrir el enlace de contacto.')),
+                          );
+                        }
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFC780FF), // Violeta del mockup
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(28),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Text(
+                          'Enviar Mensaje Directo',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Icon(Icons.send_rounded, color: Colors.white, size: 20),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             const SizedBox(height: 40),
           ],
         ),
