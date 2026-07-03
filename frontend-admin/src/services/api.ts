@@ -1,4 +1,4 @@
-const API_URL = 'http://127.0.0.1:8080/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8080/api';
 
 export const getToken = () => localStorage.getItem('token');
 export const setToken = (token: string) => localStorage.setItem('token', token);
@@ -22,12 +22,12 @@ async function fetchWithAuth(endpoint: string, options: RequestInit = {}) {
   });
 
   if (!response.ok) {
-    if (response.status === 401) {
+    if (response.status === 401 && !endpoint.includes('/auth/login')) {
       removeToken();
       window.location.reload(); // Force reload to trigger login screen
     }
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || 'API Error');
+    throw new Error(errorData.error || errorData.message || 'Error al conectar con la API');
   }
 
   // Some endpoints might return empty body on success (like DELETE or some PATCH)

@@ -52,6 +52,13 @@ export function ModerationProfessionalRequests() {
       <div className={pageStyles.header}>
         <h1 className={pageStyles.title}>Ascensos a Profesional</h1>
         <p className={pageStyles.subtitle}>Revisa los carnets de identidad para otorgar insignias de profesional</p>
+        <div style={{ marginTop: '16px', padding: '12px 16px', backgroundColor: '#E0F2FE', borderLeft: '4px solid #0284C7', borderRadius: '4px', color: '#0369A1', fontSize: '14px' }}>
+          <strong>ℹ️ Importante:</strong> Antes de aprobar, debes ingresar el RUT del usuario en el{' '}
+          <a href="https://rnpi.superdesalud.gob.cl/#" target="_blank" rel="noopener noreferrer" style={{ color: '#0284C7', fontWeight: 'bold', textDecoration: 'underline' }}>
+            Registro Nacional de Prestadores Individuales de Salud
+          </a>
+          {' '}para verificar que efectivamente es un profesional de salud habilitado.
+        </div>
       </div>
 
       {pendingCount > 0 && (

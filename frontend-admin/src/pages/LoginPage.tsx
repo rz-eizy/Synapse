@@ -22,7 +22,11 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
       await login(email, password);
       onLoginSuccess();
     } catch (err: any) {
-      setError(err.message || 'Error al iniciar sesión');
+      if (err.message && err.message.includes('Unauthorized')) {
+        setError('Contraseña o correo incorrectos');
+      } else {
+        setError(err.message || 'Error al iniciar sesión');
+      }
     } finally {
       setLoading(false);
     }
