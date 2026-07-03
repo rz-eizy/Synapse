@@ -56,6 +56,9 @@ public class ProfessionalRequestService {
         ProfessionalRequest request = new ProfessionalRequest();
         request.setUser(u);
         request.setVerificationPictureUrl(imageUrl);
+        request.setProfessionName("N/A"); // Evita error de constraint NOT NULL de esquemas anteriores
+        request.setCurrentWork("N/A"); // Evita error de constraint NOT NULL
+        request.setCostWork(0); // Evita error de constraint NOT NULL
         request.setCreatedAt(LocalDateTime.now(clock)); 
         return requestRepository.save(request);
     }

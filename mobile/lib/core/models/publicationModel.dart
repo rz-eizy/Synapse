@@ -28,7 +28,9 @@ class PublicationModel {
     return PublicationModel(
       id: json['id']?.toString(),
       authorName: authorJson?['username'] ?? json['authorName'] ?? 'Usuario Anónimo',
-      authorRole: authorJson?['role'] ?? json['authorRole'] ?? 'REGULAR',
+      authorRole: (authorJson?['role'] == 'professional' && authorJson?['professional'] != null && authorJson!['professional']['professionName'] != null)
+          ? authorJson['professional']['professionName']
+          : (authorJson?['role'] ?? json['authorRole'] ?? 'regular'),
       authorImageUrl: authorJson?['profilePictureUrl'] ?? json['authorProfilePicture'] ?? '',
       content: json['content'] ?? '',
       imageUrl: json['imageUrl'],

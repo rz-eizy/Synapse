@@ -6,6 +6,7 @@ import '../../core/services/reportService.dart';
 class AppComment {
   final String? id;
   final String author;
+  final String authorRole;
   final String text;
   final String time;
   final String? imageUrl;
@@ -13,6 +14,7 @@ class AppComment {
   const AppComment({
     this.id,
     required this.author,
+    required this.authorRole,
     required this.text,
     required this.time,
     this.imageUrl,
@@ -84,7 +86,7 @@ class _CommentsSheetState extends State<CommentsSheet> {
     if (!mounted) return;
 
     if (success) {
-      final newComment = AppComment(author: 'Tú', text: text, time: 'ahora');
+      final newComment = AppComment(author: 'Tú', authorRole: 'regular', text: text, time: 'ahora');
       setState(() {
         _comments.add(newComment);
         _isLoading = false;
@@ -452,13 +454,26 @@ class _CommentTileState extends State<_CommentTile>
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                widget.comment.author,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 13,
-                                  color: AppColors.textPrimary,
-                                ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    widget.comment.author,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 13,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                  Text(
+                                    '@${widget.comment.authorRole.toLowerCase()}',
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
                               ),
                               Row(
                                 children: [

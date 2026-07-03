@@ -1168,6 +1168,7 @@ class _PublicationListState extends State<_PublicationList> {
               key: i == 0 ? widget.firstCardKey : null,
               id: p.id,
               userName: p.authorName,
+              userRole: p.authorRole,
               userImageUrl: p.authorImageUrl ?? '',
               postImageUrl: p.imageUrl,
               date: '${p.createdAt.day}/${p.createdAt.month}/${p.createdAt.year}',

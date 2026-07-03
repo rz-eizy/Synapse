@@ -5,20 +5,8 @@ import 'editAccount_view.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../core/services/userService.dart';
 import '../../widgets/upgrade_professional_dialog.dart';
-
-class _PostPreview {
-  final String? imageUrl;
-  final String text;
-  final int likes;
-  final int comments;
-
-  const _PostPreview({
-    this.imageUrl,
-    required this.text,
-    this.likes = 0,
-    this.comments = 0,
-  });
-}
+import '../../../core/models/publicationModel.dart';
+import '../../widgets/community_card.dart';
 
 class AccountView extends StatefulWidget {
   const AccountView({super.key});
@@ -33,9 +21,10 @@ class _AccountViewState extends State<AccountView>
   final _storage = const FlutterSecureStorage();
 
   bool _isLoading = true;
-  String _username = '';
+  String _username = 'Usuario';
   String _profileImageUrl = '';
-  List<_PostPreview> _userPosts = [];
+  String _userRole = 'regular';
+  List<PublicationModel> _userPosts = [];
 
   late final AnimationController _fadeController;
   late final Animation<double> _fadeAnimation;
@@ -69,16 +58,15 @@ class _AccountViewState extends State<AccountView>
         _username = profileData['username'] ?? 'Usuario';
         _profileImageUrl = profileData['profilePictureUrl'] ?? '';
         _isProfessional = profileData['role'] == 'professional';
+        
+        if (_isProfessional && profileData['professional'] != null && profileData['professional']['professionName'] != null) {
+          _userRole = profileData['professional']['professionName'];
+        } else {
+          _userRole = profileData['role'] ?? 'regular';
+        }
 
         _userPosts = publicationsJson
-            .map(
-              (pub) => _PostPreview(
-                text: pub['content'] ?? '',
-                imageUrl: pub['imageUrl'],
-                likes: pub['likes'] ?? 0,
-                comments: pub['commentsCount'] ?? 0,
-              ),
-            )
+            .map((pub) => PublicationModel.fromJson(pub as Map<String, dynamic>))
             .toList();
 
         _isLoading = false;
@@ -142,6 +130,7 @@ class _AccountViewState extends State<AccountView>
                   SliverToBoxAdapter(
                     child: _ProfileHeader(
                       username: _username,
+                      userRole: _userRole,
                       profileImageUrl: _profileImageUrl,
                       postCount: _userPosts.length,
                       isProfessional: _isProfessional,
@@ -216,12 +205,14 @@ class _AccountViewState extends State<AccountView>
 // ── Header de perfil ──────────────────────────────────────────────────────────
 class _ProfileHeader extends StatelessWidget {
   final String username;
+  final String userRole;
   final String profileImageUrl;
   final int postCount;
   final bool isProfessional;
 
   const _ProfileHeader({
     required this.username,
+    required this.userRole,
     required this.profileImageUrl,
     required this.postCount,
     required this.isProfessional,
@@ -282,7 +273,7 @@ class _ProfileHeader extends StatelessWidget {
           ),
           const SizedBox(height: 2),
           Text(
-            '@${username.replaceAll(' ', '').toLowerCase()}',
+            '@${userRole.toLowerCase()}',
             style: const TextStyle(
               fontSize: 13,
               color: AppColors.primary,
@@ -419,7 +410,7 @@ class _ProfileHeader extends StatelessWidget {
 
 // ── Thumbnails Interactivos de la Grilla ──────────────────────────────────────
 class _PostThumbnail extends StatefulWidget {
-  final _PostPreview post;
+  final PublicationModel post;
   const _PostThumbnail({required this.post});
 
   @override
@@ -434,8 +425,8 @@ class _PostThumbnailState extends State<_PostThumbnail> {
   @override
   void initState() {
     super.initState();
-    _likes = widget.post.likes;
-    _commentCount = widget.post.comments;
+    _likes = widget.post.likesCount;
+    _commentCount = widget.post.commentsCount;
   }
 
   void _openDetail() {
@@ -443,12 +434,39 @@ class _PostThumbnailState extends State<_PostThumbnail> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _PostDetailSheet(
-        post: widget.post,
-        initialLikes: _likes,
-        initialCommentCount: _commentCount,
-        onLikeChanged: (val) => setState(() => _likes = val),
-        onCommentAdded: () => setState(() => _commentCount++),
+      builder: (_) => Container(
+        height: MediaQuery.of(context).size.height * 0.9,
+        decoration: const BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.divider.withOpacity(0.6),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              const SizedBox(height: 16),
+              CommunityCard(
+                id: widget.post.id,
+                userName: widget.post.authorName,
+                userRole: widget.post.authorRole,
+                userImageUrl: widget.post.authorImageUrl ?? '',
+                postImageUrl: widget.post.imageUrl,
+                date: '${widget.post.createdAt.day}/${widget.post.createdAt.month}/${widget.post.createdAt.year}',
+                content: widget.post.content,
+                likeCount: _likes,
+                commentCount: _commentCount,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -484,7 +502,7 @@ class _PostThumbnailState extends State<_PostThumbnail> {
 }
 
 class _ImageThumbnail extends StatelessWidget {
-  final _PostPreview post;
+  final PublicationModel post;
   final int likes;
   const _ImageThumbnail({required this.post, required this.likes});
 
@@ -548,7 +566,7 @@ class _ImageThumbnail extends StatelessWidget {
 }
 
 class _TextThumbnail extends StatelessWidget {
-  final _PostPreview post;
+  final PublicationModel post;
   final int likes;
   const _TextThumbnail({required this.post, required this.likes});
 
@@ -564,7 +582,7 @@ class _TextThumbnail extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                post.text,
+                post.content,
                 style: const TextStyle(
                   fontSize: 11,
                   color: AppColors.textPrimary,
@@ -595,202 +613,6 @@ class _TextThumbnail extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-// ── Sheet de detalle de post ──────────────────────────────────────────────────
-class _PostDetailSheet extends StatefulWidget {
-  final _PostPreview post;
-  final int initialLikes;
-  final int initialCommentCount;
-  final ValueChanged<int> onLikeChanged;
-  final VoidCallback onCommentAdded;
-
-  const _PostDetailSheet({
-    required this.post,
-    required this.initialLikes,
-    required this.initialCommentCount,
-    required this.onLikeChanged,
-    required this.onCommentAdded,
-  });
-
-  @override
-  State<_PostDetailSheet> createState() => _PostDetailSheetState();
-}
-
-class _PostDetailSheetState extends State<_PostDetailSheet> {
-  late int _likes;
-  bool _liked = false;
-  late List<AppComment> _comments;
-
-  @override
-  void initState() {
-    super.initState();
-    _likes = widget.initialLikes;
-    _comments = List.generate(
-      widget.initialCommentCount,
-      (i) => AppComment(
-        author: 'Usuario ${i + 1}',
-        text: 'Comentario de ejemplo ${i + 1}',
-        time: 'hace ${i + 1}h',
-      ),
-    );
-  }
-
-  void _toggleLike() {
-    setState(() {
-      _liked = !_liked;
-      _likes += _liked ? 1 : -1;
-    });
-    widget.onLikeChanged(_likes);
-  }
-
-  void _openComments() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => CommentsSheet(
-        initialComments: _comments,
-        onCommentAdded: (String textContent) async {
-          final newComment = AppComment(
-            author: 'Tú',
-            text: textContent,
-            time: 'ahora',
-          );
-          setState(() => _comments.add(newComment));
-          widget.onCommentAdded();
-          return true;
-        },
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.only(top: 14, bottom: 20),
-              child: Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE8E8EE),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-          ),
-
-          if (widget.post.imageUrl != null) ...[
-            ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: Image.network(
-                widget.post.imageUrl!,
-                width: double.infinity,
-                height: 240,
-                fit: BoxFit.cover,
-              ),
-            ),
-            const SizedBox(height: 16),
-          ],
-
-          Text(
-            widget.post.text,
-            style: const TextStyle(
-              fontSize: 14.5,
-              color: AppColors.textPrimary,
-              height: 1.5,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Container(height: 1, color: const Color(0xFFF1EEFA)),
-          const SizedBox(height: 12),
-
-          Row(
-            children: [
-              InkWell(
-                onTap: _toggleLike,
-                borderRadius: BorderRadius.circular(10),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  child: Row(
-                    children: [
-                      AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 200),
-                        transitionBuilder: (child, anim) =>
-                            ScaleTransition(scale: anim, child: child),
-                        child: Icon(
-                          _liked
-                              ? Icons.favorite_rounded
-                              : Icons.favorite_border_rounded,
-                          key: ValueKey(_liked),
-                          size: 22,
-                          color: _liked
-                              ? const Color(0xFFE74C3C)
-                              : AppColors.textMuted,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        '$_likes',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: AppColors.textSecondary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              InkWell(
-                onTap: _openComments,
-                borderRadius: BorderRadius.circular(10),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.chat_bubble_outline_rounded,
-                        size: 20,
-                        color: AppColors.textMuted,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        '${_comments.length}',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: AppColors.textSecondary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
       ),
     );
   }
